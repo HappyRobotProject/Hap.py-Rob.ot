@@ -49,10 +49,10 @@ tweets
 avail_trends=availableTrendLocations()
 head(avail_trends)
 
+
+
+
 #United States / United States = 23424977
 getTrends(23424977)
-
-
-
 
 
