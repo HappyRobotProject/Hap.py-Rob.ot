@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>Label</key>
+        <string>com.happyrobot.hourly</string>
+
+        <key>ProgramArguments</key>
+        <array>
+                <string>/Users/tim/code/Hap.py-Rob.ot/bash/hourly-tasks.sh</string>
+        </array>
+        
+        <key>UserName</key>
+		<string>tim</string>
+        
+        <key>StandardOutPath</key>
+   		<string>/Users/tim/data/hourlya-tasks.log</string>
+    	<key>StandardErrorPath</key>
+    	<string>/Users/tim/data/hourlya-tasks.err.log</string>
+    	<key>WorkingDirectory</key>
+		<string>/Users/tim/data</string>
+
+        <key>StartCalendarInterval</key>
+    	<dict>
+        	<key>Minute</key>
+        	<integer>15</integer>
+    	</dict>
+</dict>
+</plist>

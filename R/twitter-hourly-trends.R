@@ -1,13 +1,13 @@
 #
 #
 #
-setwd("~/data")
+setwd("/Users/tim/data")
 #Libraries
 library(twitteR)
 library(plyr)
 
 # check to see if the twitter-util.R script is loaded
-if(!exists("twitterutilversion", mode="function")) source("~/code/Hap.py-Rob.ot/R/twitter-util.R")
+if(!exists("twitterutilversion", mode="function")) source("/Users/tim/code/Hap.py-Rob.ot/R/twitter-util.R")
 #source("~/code/Hap.py-Rob.ot/R/twitter-util.R")
 
 keys <- twkeys()
@@ -20,6 +20,7 @@ trends <- twitteR::getTrends(23424977)
 
 library(RSQLite)
 library(sqldf)
-db <- dbConnect(SQLite(), dbname="~/data/Test.sqlite")
+db <- dbConnect(SQLite(), dbname="/Users/tim/data/Test.sqlite")
 dbWriteTable(conn = db, name = "trends", value = trends, row.names = FALSE, append = TRUE)
 dbDisconnect(db)
+
