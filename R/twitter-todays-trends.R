@@ -4,7 +4,7 @@
 #########################################################
 # Script Setup
 #########################################################
-setwd("~/data")
+setwd("/Users/tim/data")
 
 #########################################################
 # Libraries
@@ -89,7 +89,14 @@ p1 <- ggplot(data = sentimentTotals, aes(x = sentiment, y = count)) +
   theme(legend.position = "none") +
   xlab("Sentiment") + ylab("Total Count") + ggtitle("Total Sentiment Score for All Tweets")
 
-
+library(tidyr)
+max <- max(sentimentTotals$count)
+sentimentTotals$percent = (sentimentTotals$count / max )* 4 + 3
+rad <- select(sentimentTotals,sentiment, percent)
+tran <- spread(rad,key=sentiment, value=percent)
+tran <- cbind(group = "Sentiment", tran)
+p2 <- ggradar(tran, grid.max = 7, grid.min = 0, centre.y = 0, plot.legend = FALSE, font.radar = "Arial", axis.label.size = 3, group.line.width = 1.5, group.point.size = 3)
+p2
 #########################################################
 # Word Cloud
 #########################################################
@@ -186,81 +193,28 @@ loadfonts()
 #fonts()
 
 #Colors
-dark1 <- "#1A0641"
+background <- "#2d3142"
+white <- "#ffffff"
+
+dark1 <- "#7084a5"
 med1 <- "#A1CEE0"
-dark2 <- "#FF0712"
+dark2 <- "#ef8354"
 med2 <- "#C52D41"
-highlight <- "#D2EDF1"
-
-pdf("~/Documents/R/DailyTrump.pdf", width = 10, height = 20)
-#Printout the Wordcloud
-par(bg = highlight, fig=c(0.25,0.75,0.6,0.9))
-wordcloud(words = d$word, freq = d$freq, min.freq = 1,max.words=200, random.order=FALSE, rot.per=0.35, colors=brewer.pal(8, "RdBu"))
-
-#grid.newpage() 
-#Create viewport for the title
-vp1 <- viewport(x = 0, y = 0.9, w = 1.0, h = 0.1, just = c("left", "bottom"), name = "vp1")
-vp2 <- viewport(x = 0.0, y = 0.8, w = 0.25, h = 0.1, just = c("left", "bottom"))
-vp3 <- viewport(x = 0.0, y = 0.0, w = 1.0, h = 0.3, just = c("left", "bottom"))
-vp4 <- viewport(x = 0.0, y = 0.0, w = 1.0, h = 1.0, just = c("left", "bottom"))
-
-#pushViewport(viewport(layout = grid.layout(4, 3)))
-pushViewport(vp1)
-grid.rect(gp = gpar(fill = dark1, col = dark1))
-#grid.rect(gp = gpar(fill = dark1, col = dark1), x = unit(0.5, "npc"), y = unit(0.95, "npc"), width = unit(1, "npc"), height = unit(0.10, "npc"))
-grid.text("#TWITTER", y = unit(1, "npc"), x = unit(0.5, "npc"), vjust = 1, hjust = .5, gp = gpar(fontfamily = "Impact", col = highlight, cex = 12, alpha = 0.2))
-grid.text("Daily Trump", y = unit(0.4, "npc"), gp = gpar(fontfamily = "Impact", col = med2, cex = 6.4))
-
-grid.text("@Paying_Atention", vjust = 0, y = unit(0.1, "npc"), gp = gpar(fontfamily = "Impact", col = med1, cex = 0.8))
-grid.text("Twitter Sentiment Analysis", vjust = 0, y = unit(0.05, "npc"), gp = gpar(fontfamily = "Impact", col = med1, cex = 0.8))
-grid.text("#trump @realDonaldTrump", vjust = 0, y = unit(0.0, "npc"), gp = gpar(fontfamily = "Impact", col = med1, cex = 0.8))
-upViewport()
-pushViewport(vp2)
-grid.rect(gp = gpar(fill = dark2, col = dark2))
-grid.text("Tweets", vjust = 0, y = unit(0.8, "npc"), gp = gpar(fontfamily = "Impact", col = highlight, cex = 3))
-grid.text(nr, vjust = 0, y = unit(0.1, "npc"), gp = gpar(fontfamily = "Impact", col = highlight, cex = 8))
-upViewport()
-#pushViewport(vp3)
-#Sentiment Chart
-#grid.rect(gp = gpar(fill = dark1, col = dark1))
-#print(p1)
-print(p1, vp = vp3)
+highlight <- "#bfc0c0"
+accent <- dark2
+main <-dark1
+#print(p1, vp = vp3)
 #print(p1, vp = vp4)
-
-
-#print(p1, vp = vplayout(3, 1:3))
-#print(p2, vp = vplayout(2, 1:3))
-#grid.rect(gp = gpar(fill = "#E7A922", col = "#E7A922"), x = unit(0.5, "npc"), y = unit(0.82, "npc"), width = unit(1, "npc"), height = unit(0.11, "npc"))
-#grid.text("CATEGORY", y = unit(0.82, "npc"), x = unit(0.5, "npc"), vjust = .5, hjust = .5, gp = gpar( col = "#CA8B01", cex = 13, alpha = 0.3))
-#grid.text("A VERY VERY VERY VERY LONG TITLE", vjust = 0, hjust = 0, x = unit(0.01, "npc"), y = unit(0.88, "npc"), gp = gpar( col = "#552683", cex = 1.2))
-#grid.text("DATA INFO", vjust = 0, hjust = 0, x = unit(0.01, "npc"), y = unit(0.86, "npc"), gp = gpar(col = "white", cex = 1.2))
-#grid.text(paste(
-#  "Syndicated to",
-#  "Source",
-#  "Author",
-#  "Maintainer",
-#  "Frequency of Update",
-#  "Granularity",
-#  "Temporal Date", sep = "\n"), vjust = 0, hjust = 0, x = unit(0.01, "npc"), y = unit(0.79, "npc"), gp = gpar( col = "#552683", cex = 0.8))
-#grid.text(paste(
-#  "http://alstatr.blogspot.com",
-#  "http://alstatr.blogspot.com",
-#  "Analysis with Programming",
-#  "Al-Ahmadgaid B. Asaad",
-#  "Annually",
-#  "National",
-#  "2011-2013", sep = "\n"), vjust = 0, hjust = 0, x = unit(0.15, "npc"), y = unit(0.79, "npc"), gp = gpar(col = "#552683", cex = 0.8))
-dev.off()
 
 
 png("~/data/images/daily-trends.png", width = 4, height = 3, units = "in", res = 500)
 # Plot the word cloud (will force a new page)
-par(bg = highlight, fig=c(0.1,0.9,0.1,0.9), mar=c(0,0,0,0))
-wordcloud(words = d$word, freq = d$freq, scale = c(2,0.25), min.freq = 1,max.words=200, random.order=FALSE, rot.per=0.35, colors=brewer.pal(8, "RdBu"))
+par(bg = background, fig=c(0.1,0.9,0.1,0.9), mar=c(0,0,0,0))
+wordcloud(words = d$word, freq = d$freq, scale = c(2,0.25), min.freq = 1,max.words=200, random.order=FALSE, rot.per=0.35, colors=c(accent, main, highlight))
 vp1 <- viewport(x = 0, y = 0.85, w = 1.0, h = 0.15, just = c("left", "bottom"), name = "vp1")
 pushViewport(vp1)
-grid.rect(gp = gpar(fill = dark1, col = dark1))
-grid.text("Daily Twitter Trends", vjust = 0, y = unit(0.1, "npc"), gp = gpar(fontfamily = "Impact", col = med1, cex = 0.8))
+grid.rect(gp = gpar(fill = background, col = background))
+grid.text("#DailyTwitterTrend", vjust = 0, y = unit(0.1, "npc"), gp = gpar(fontfamily = "Impact", col = main, cex = 0.8))
 upViewport()
 vp2 <- viewport(x = 0.77, y = 0.0, w = 0.23, h = 0.85, just = c("left", "bottom"), name = "vp2")
 pushViewport(vp2)
@@ -271,10 +225,10 @@ grid.text(paste(
   topTags[2],
   topTags[3],
   topTags[4],
-  topTags[5], sep = "\n"), vjust = 0, hjust = 0, x = unit(0.01, "npc"), y = unit(0.5, "npc"), gp = gpar( col = highlight, cex = 0.5))
+  topTags[5], sep = "\n"), vjust = 0, hjust = 0, x = unit(0.01, "npc"), y = unit(0.5, "npc"), gp = gpar( col = main, cex = 0.5))
 upViewport()
 vp3 <- viewport(x = 0.23, y = 0.0, w = 0.23, h = 0.85, just = c("left", "bottom"), name = "vp3")
-grid.text("Sentiment Analysis", vjust = 0, y = unit(0.9, "npc"), gp = gpar(fontfamily = "Impact", col = med1, cex = 0.7))
+grid.text("Sentiment Analysis", vjust = 0, y = unit(0.9, "npc"), gp = gpar(fontfamily = "Impact", col = main, cex = 0.7))
 pushViewport(vp3)
 
 dev.off()

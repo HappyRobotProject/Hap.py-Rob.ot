@@ -4,6 +4,10 @@ install.packages("useful")
 #Data Prep
 install.packages("plyr")
 install.packages("readr")
+#Graphics
+install.packages("ggplot2")
+install.packages("ggradar")
+devtools::install_github("ricardo-bion/ggradar") # dev version
 #Database Packages
 install.packages("DBI")
 install.packages("RSQLite")
@@ -90,4 +94,8 @@ library("RColorBrewer")
 library(extrafont)
 font_import() # Import all fonts
 fonts() # Print list of all fonts
+# configured to work on a Mac, change directory to Unix or Windows
+download.file("https://dl.dropboxusercontent.com/u/2364714/airbnb_ttf_fonts/Circular Air-Light 3.46.45 PM.ttf", "/Library/Fonts/Circular Air-Light 3.46.45 PM.ttf", method="curl")
+
+extrafont::font_import(pattern = 'Circular', prompt=FALSE)
 
