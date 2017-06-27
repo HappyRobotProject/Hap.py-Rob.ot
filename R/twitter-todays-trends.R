@@ -6,6 +6,65 @@
 #########################################################
 setwd("/Users/tim/data")
 
+#Colors
+background <- "#2d3142"
+white <- "#ffffff"
+
+dark1 <- "#7084a5"
+med1 <- "#A1CEE0"
+dark2 <- "#ef8354"
+med2 <- "#C52D41"
+highlight <- "#bfc0c0"
+accent <- dark2
+main <-dark1
+
+# Configure Theme
+basic_theme <- function(){
+  theme(
+    plot.background = element_rect(fill = background, colour = background),
+    panel.background = element_rect(fill = background, color = background)
+  )
+}
+kobe_theme <- function() {
+  theme(
+    plot.background = element_rect(fill = "#E2E2E3", colour = "#E2E2E3"),
+    panel.background = element_rect(fill = "#E2E2E3"),
+    #panel.background = element_rect(fill = "white"),
+    axis.text = element_text(colour = "#E7A922", family = "Impact"),
+    plot.title = element_text(colour = "#552683", face = "bold", size = 18, vjust = 1, family = "Impact"),
+    axis.title = element_text(colour = "#552683", face = "bold", size = 13, family = "Impact"),
+    panel.grid.major.x = element_line(colour = "#E7A922"),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    strip.text = element_text(family = "Impact", colour = "white"),
+    strip.background = element_rect(fill = "#E7A922"),
+    axis.ticks = element_line(colour = "#E7A922")
+  )
+}
+
+kobe_theme2 <- function() {
+  theme(
+    legend.position = "bottom", legend.title = element_text(family = "Impact", colour = "#552683", size = 10),
+    legend.background = element_rect(fill = "#E2E2E3"),
+    legend.key = element_rect(fill = "#E2E2E3", colour = "#E2E2E3"),
+    legend.text = element_text(family = "Impact", colour = "#E7A922", size = 10),
+    plot.background = element_rect(fill = "#E2E2E3", colour = "#E2E2E3"),
+    panel.background = element_rect(fill = "#E2E2E3"),
+    #panel.background = element_rect(fill = "white"),
+    axis.text = element_text(colour = "#E7A922", family = "Impact"),
+    plot.title = element_text(colour = "#552683", face = "bold", size = 18, vjust = 1, family = "Impact"),
+    axis.title = element_text(colour = "#552683", face = "bold", size = 13, family = "Impact"),
+    panel.grid.major.y = element_line(colour = "#E7A922"),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    strip.text = element_text(family = "Impact", colour = "white"),
+    strip.background = element_rect(fill = "#E7A922"),
+    axis.ticks = element_line(colour = "#E7A922")
+  )
+}
+
 #########################################################
 # Libraries
 #########################################################
@@ -83,20 +142,115 @@ sentimentTotals <- data.frame(colSums(sentimentTweets[,c(2:11)]))
 names(sentimentTotals) <- "count"
 sentimentTotals <- cbind("sentiment" = rownames(sentimentTotals), sentimentTotals)
 rownames(sentimentTotals) <- NULL
+emotionTotals <- sentimentTotals[1:8,]
+positiveNegative <- sentimentTotals[9:10,]
+
+
 #par(bg = med1, fig=c(0.25,0.75,0.6,0.9))
 p1 <- ggplot(data = sentimentTotals, aes(x = sentiment, y = count)) +
   geom_bar(aes(fill = sentiment), stat = "identity") +
   theme(legend.position = "none") +
   xlab("Sentiment") + ylab("Total Count") + ggtitle("Total Sentiment Score for All Tweets")
 
+p1
+p1+kobe_theme()
+#########################################################
+# Sentiment Plots for the infographic
+#########################################################
 library(tidyr)
 max <- max(sentimentTotals$count)
 sentimentTotals$percent = (sentimentTotals$count / max )* 4 + 3
 rad <- select(sentimentTotals,sentiment, percent)
 tran <- spread(rad,key=sentiment, value=percent)
 tran <- cbind(group = "Sentiment", tran)
-p2 <- ggradar(tran, grid.max = 7, grid.min = 0, centre.y = 0, plot.legend = FALSE, font.radar = "Arial", axis.label.size = 3, group.line.width = 1.5, group.point.size = 3)
+p2 <- ggradar(tran, grid.max = 7, 
+              grid.min = 0, centre.y = 0, plot.legend = FALSE, 
+              font.radar = "Arial", axis.label.size = 3, 
+              group.line.width = 1.5, group.point.size = 3,
+              background.circle.colour = background,
+              axis.line.colour = main,
+              gridline.max.colour = main, gridline.min.colour = main, gridline.mid.colour = main,
+              )
 p2
+
+library(ggplot2)
+y1 <- round(rnorm(n = 36, mean = 7, sd = 2)) # Simulate data from normal distribution
+y2 <- round(rnorm(n = 36, mean = 21, sd = 6))
+y3 <- round(rnorm(n = 36, mean = 50, sd = 8))
+x <- rep(LETTERS[1:12], 3)
+grp <- rep(c("Grp 1", "Grp 2", "Grp 3"), each = 12)
+dat <- data.frame(grp, x, y1, y2, y3)
+
+p3 <- ggplot(data = dat, aes(x = reorder(x, rep(1:12, 3)), y = y3, group = factor(grp))) +
+  geom_bar(stat = "identity", fill = "#552683") + coord_polar() + facet_grid(. ~ grp) +
+  ylab("Y LABEL") + xlab("X LABEL") + ggtitle("TITLE OF THE FIGURE")
+p3
+p3 + kobe_theme2()
+
+
+
+
+
+#########################################################
+# Positive / Negative Donut Chart
+#########################################################
+
+# Create test data.
+donutData <- positiveNegative # = data.frame(count=c(10, 60, 30), category=c("A", "B", "C"))
+
+# Add addition columns, needed for drawing with geom_rect.
+donutData$fraction = donutData$count / sum(donutData$count)
+#donutData = donutData[order(donutData$sentiment), ]
+donutData <- dplyr::arrange(donutData,desc(sentiment))
+donutData$ymax = cumsum(donutData$fraction) +0.0
+donutData$ymin = c(0, head(donutData$ymax, n=-1)) +0.0
+donutData$ymid = ((donutData$ymax - donutData$ymin)/2) + donutData$ymin
+
+
+
+# Make the plot
+p4 = ggplot(donutData, aes(fill=sentiment, ymax=ymax, ymin=ymin, xmax=4, xmin=2.5)) +
+  geom_rect() +
+  scale_fill_manual(name="Overall Sentiment", values = c(accent, main), label=c("Negative","Positive")) +  
+  geom_text( aes(label = paste(round(fraction * 100, digits = 0),"%",sep=""), y=donutData$ymid, x = 3.25), size=6, fontface="bold", color=background)+
+  coord_polar(theta="y") +
+  xlim(c(0, 4)) +
+  theme(legend.text=element_text(size=12, family="Arial", color = highlight),
+        legend.position = c(0.5,0.5),
+        legend.background = element_rect(fill = background, color = background),
+        legend.key = element_rect(color=background, fill = background),
+        legend.title = element_text(size=14, family="Arial", color = highlight),
+        axis.ticks=element_blank(),
+        axis.text=element_blank(),
+        axis.title=element_blank(),
+        panel.grid=element_blank(),
+        panel.border=element_blank())+
+  #ggplot2::annotate("text", x = 0, y = 0, label = "plus minus !", color=highlight) +
+  labs(title="")
+p4
+p4 + basic_theme()
+p4 + kobe_theme2()
+
+# Create test data.
+dat = data.frame(count=c(10, 60, 30), category=c("A", "B", "C"))
+
+# Add addition columns, needed for drawing with geom_rect.
+dat$fraction = dat$count / sum(dat$count)
+dat = dat[order(dat$fraction), ]
+dat$ymax = cumsum(dat$fraction)
+dat$ymin = c(0, head(dat$ymax, n=-1))
+
+# Make the plot
+pt = ggplot(dat, aes(fill=category, ymax=ymax, ymin=ymin, xmax=4, xmin=3)) +
+  geom_rect() +
+  coord_polar(theta="y") +
+  xlim(c(0, 4)) +
+  theme(panel.grid=element_blank()) +
+  theme(axis.text=element_blank()) +
+  theme(axis.ticks=element_blank()) +
+  ggplot2::annotate("text", x = 0, y = 0, label = "My Ring plot !") +
+  labs(title="")
+pt + basic_theme()
 #########################################################
 # Word Cloud
 #########################################################
@@ -192,17 +346,7 @@ library(useful)
 loadfonts()
 #fonts()
 
-#Colors
-background <- "#2d3142"
-white <- "#ffffff"
 
-dark1 <- "#7084a5"
-med1 <- "#A1CEE0"
-dark2 <- "#ef8354"
-med2 <- "#C52D41"
-highlight <- "#bfc0c0"
-accent <- dark2
-main <-dark1
 #print(p1, vp = vp3)
 #print(p1, vp = vp4)
 
@@ -230,6 +374,7 @@ upViewport()
 vp3 <- viewport(x = 0.23, y = 0.0, w = 0.23, h = 0.85, just = c("left", "bottom"), name = "vp3")
 grid.text("Sentiment Analysis", vjust = 0, y = unit(0.9, "npc"), gp = gpar(fontfamily = "Impact", col = main, cex = 0.7))
 pushViewport(vp3)
+p2
 
 dev.off()
 
