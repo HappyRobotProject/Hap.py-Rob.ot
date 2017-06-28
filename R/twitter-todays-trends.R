@@ -22,9 +22,13 @@ main <-dark1
 basic_theme <- function(){
   theme(
     plot.background = element_rect(fill = background, colour = background),
-    panel.background = element_rect(fill = background, color = background)
+    plot.margin = unit(c(0,0,0,0),"npc"),
+    panel.background = element_rect(fill = background, color = background),
+    panel.spacing = unit(c(0,0,0,0), "npc"),
+    legend.position = "none"
   )
 }
+
 kobe_theme <- function() {
   theme(
     plot.background = element_rect(fill = "#E2E2E3", colour = "#E2E2E3"),
@@ -78,7 +82,9 @@ library(RColorBrewer)
 
 # check to see if the twitter-util.R script is loaded
 if(!exists("twitterutilversion", mode="function")) source("~/code/Hap.py-Rob.ot/R/twitter-util.R")
-#source("~/code/Hap.py-Rob.ot/R/twitter-util.R")
+# check to see if the plot-util.R script is loaded
+if(!exists("plotutilversion", mode="function")) source("~/code/Hap.py-Rob.ot/R/plot-util.R")
+source("~/code/Hap.py-Rob.ot/R/plot-util.R")
 
 #Read in todays Trends from database
 db <- dbConnect(SQLite(), dbname="~/data/Test.sqlite")
@@ -158,20 +164,24 @@ p1+kobe_theme()
 # Sentiment Plots for the infographic
 #########################################################
 library(tidyr)
-max <- max(sentimentTotals$count)
-sentimentTotals$percent = (sentimentTotals$count / max )* 4 + 3
-rad <- select(sentimentTotals,sentiment, percent)
+
+max <- max(emotionTotals$count)
+emotionTotals$percent = (emotionTotals$count / max )* 4 + 3
+rad <- select(emotionTotals,sentiment, percent)
 tran <- spread(rad,key=sentiment, value=percent)
 tran <- cbind(group = "Sentiment", tran)
-p2 <- ggradar(tran, grid.max = 7, 
+p2 <- radarPlot(tran, grid.max = 7, 
               grid.min = 0, centre.y = 0, plot.legend = FALSE, 
-              font.radar = "Arial", axis.label.size = 3, 
-              group.line.width = 1.5, group.point.size = 3,
+              font.radar = "Arial", axis.label.size = 1.5, 
+              group.line.width = 0.25, group.point.size = 0.33,grid.line.width=0.25,
               background.circle.colour = background,
-              axis.line.colour = main,
+              axis.line.colour = main, 
               gridline.max.colour = main, gridline.min.colour = main, gridline.mid.colour = main,
+              group.colour = c(accent),values.radar = c(""), axis.label.colour = accent,label.gridline.min = FALSE
               )
 p2
+radarPlot <- p2 + basic_theme()
+radarPlot
 
 library(ggplot2)
 y1 <- round(rnorm(n = 36, mean = 7, sd = 2)) # Simulate data from normal distribution
@@ -210,16 +220,18 @@ donutData$ymid = ((donutData$ymax - donutData$ymin)/2) + donutData$ymin
 
 # Make the plot
 p4 = ggplot(donutData, aes(fill=sentiment, ymax=ymax, ymin=ymin, xmax=4, xmin=2.5)) +
-  geom_rect() +
-  scale_fill_manual(name="Overall Sentiment", values = c(accent, main), label=c("Negative","Positive")) +  
-  geom_text( aes(label = paste(round(fraction * 100, digits = 0),"%",sep=""), y=donutData$ymid, x = 3.25), size=6, fontface="bold", color=background)+
+  geom_rect(fill=c(accent,main)) +
+  #scale_fill_manual(name="Overall Sentiment", values = c(accent, main), label=c("Negative","Positive")) +  
+  geom_text( aes(label = paste(round(fraction * 100, digits = 0),"%",sep=""), y=donutData$ymid, x = 3.25), size=2, fontface="bold", color=background)+
   coord_polar(theta="y") +
   xlim(c(0, 4)) +
-  theme(legend.text=element_text(size=12, family="Arial", color = highlight),
-        legend.position = c(0.5,0.5),
-        legend.background = element_rect(fill = background, color = background),
-        legend.key = element_rect(color=background, fill = background),
-        legend.title = element_text(size=14, family="Arial", color = highlight),
+  theme(#legend.text=element_text(size=3, family="Arial", color = highlight),
+        #legend.position = c(0.5,0.5),
+        #legend.box.margin = c(0,0,0,0),
+        #legend.key.size = unit(c(0.05,0.05),"npc"),
+        #legend.background = element_rect(fill = background, color = background),
+        #legend.key = element_rect(color=background, fill = background),
+        #legend.title = element_text(size=4, family="Arial", color = highlight),
         axis.ticks=element_blank(),
         axis.text=element_blank(),
         axis.title=element_blank(),
@@ -227,8 +239,9 @@ p4 = ggplot(donutData, aes(fill=sentiment, ymax=ymax, ymin=ymin, xmax=4, xmin=2.
         panel.border=element_blank())+
   #ggplot2::annotate("text", x = 0, y = 0, label = "plus minus !", color=highlight) +
   labs(title="")
+#par(mar=c(0,0,0,0))
 p4
-p4 + basic_theme()
+donutPlot <- p4 + basic_theme()
 p4 + kobe_theme2()
 
 # Create test data.
@@ -355,6 +368,8 @@ png("~/data/images/daily-trends.png", width = 4, height = 3, units = "in", res =
 # Plot the word cloud (will force a new page)
 par(bg = background, fig=c(0.1,0.9,0.1,0.9), mar=c(0,0,0,0))
 wordcloud(words = d$word, freq = d$freq, scale = c(2,0.25), min.freq = 1,max.words=200, random.order=FALSE, rot.per=0.35, colors=c(accent, main, highlight))
+vpDonut <- viewport(x = 0.5, y = 0.75, w = 1.1, h = 1.0)
+vpRadar <- viewport(x = 0.5, y = 0.25, w = 1.0, h = 1.0)
 vp1 <- viewport(x = 0, y = 0.85, w = 1.0, h = 0.15, just = c("left", "bottom"), name = "vp1")
 pushViewport(vp1)
 grid.rect(gp = gpar(fill = background, col = background))
@@ -371,10 +386,12 @@ grid.text(paste(
   topTags[4],
   topTags[5], sep = "\n"), vjust = 0, hjust = 0, x = unit(0.01, "npc"), y = unit(0.5, "npc"), gp = gpar( col = main, cex = 0.5))
 upViewport()
-vp3 <- viewport(x = 0.23, y = 0.0, w = 0.23, h = 0.85, just = c("left", "bottom"), name = "vp3")
-grid.text("Sentiment Analysis", vjust = 0, y = unit(0.9, "npc"), gp = gpar(fontfamily = "Impact", col = main, cex = 0.7))
+vp3 <- viewport(x = 0.0, y = 0.0, w = 0.23, h = 0.85, just = c("left", "bottom"), name = "vp3")
 pushViewport(vp3)
-p2
+grid.rect(gp = gpar(fill = med1, col = med1))
+print(donutPlot, vp=vpDonut)
+print(radarPlot, vp=vpRadar)
+grid.text("Sentiment Analysis", vjust = 0, y = unit(0.9, "npc"), gp = gpar(fontfamily = "Impact", col = main, cex = 0.7))
 
 dev.off()
 
