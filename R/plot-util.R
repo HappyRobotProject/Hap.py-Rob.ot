@@ -37,6 +37,7 @@ radarPlot <- function(plot.data,
                     label.gridline.min=TRUE,
                     axis.label.offset=1.15,
                     axis.label.size=8,
+                    axis.label.colour="grey",
                     axis.line.colour="grey",
                     group.line.width=1.5,
                     group.point.size=6,
@@ -218,16 +219,16 @@ radarPlot <- function(plot.data,
   #base layer = axis labels for axes to left of central y-axis [x< -(x.centre.range)]
   base <- ggplot(axis$label) + xlab(NULL) + ylab(NULL) + coord_equal() +
     geom_text(data=subset(axis$label,axis$label$x < (-x.centre.range)),
-              aes(x=x,y=y,label=text),size=axis.label.size,hjust=1, family=font.radar) +
+              aes(x=x,y=y,label=text),size=axis.label.size,hjust=1, family=font.radar, color=axis.label.colour) +
     scale_x_continuous(limits=c(-1.5*plot.extent.x,1.5*plot.extent.x)) + 
     scale_y_continuous(limits=c(-plot.extent.y,plot.extent.y))
   
   # + axis labels for any vertical axes [abs(x)<=x.centre.range]
   base <- base + geom_text(data=subset(axis$label,abs(axis$label$x)<=x.centre.range),
-                           aes(x=x,y=y,label=text),size=axis.label.size,hjust=0.5, family=font.radar)
+                           aes(x=x,y=y,label=text),size=axis.label.size,hjust=0.5, family=font.radar,color=axis.label.colour)
   # + axis labels for any vertical axes [x>x.centre.range]
   base <- base + geom_text(data=subset(axis$label,axis$label$x>x.centre.range),
-                           aes(x=x,y=y,label=text),size=axis.label.size,hjust=0, family=font.radar)
+                           aes(x=x,y=y,label=text),size=axis.label.size,hjust=0, family=font.radar,color=axis.label.colour)
   # + theme_clear [to remove grey plot background, grid lines, axis tick marks and axis text]
   base <- base + theme_clear
   #  + background circle against which to plot radar data

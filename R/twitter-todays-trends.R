@@ -5,67 +5,41 @@
 # Script Setup
 #########################################################
 setwd("/Users/tim/data")
+db_name <- "/Users/tim/data/Test.sqlite"
 
+#Fonts
+info.font <- "Impact"
 #Colors
-background <- "#2d3142"
-white <- "#ffffff"
-
-dark1 <- "#7084a5"
-med1 <- "#A1CEE0"
-dark2 <- "#ef8354"
-med2 <- "#C52D41"
-highlight <- "#bfc0c0"
-accent <- dark2
-main <-dark1
+info.background <- "#2d3142"
+info.white <- "#ffffff"
+info.main <- "#7084a5"
+info.main.light <- "#A1CEE0"
+info.accent <- "#ef8354"
+info.accent.light <- "#C52D41"
+info.highlight <- "#bfc0c0"
 
 # Configure Theme
 basic_theme <- function(){
   theme(
-    plot.background = element_rect(fill = background, colour = background),
+    plot.background = element_rect(fill = "transparent", colour = "transparent"),
     plot.margin = unit(c(0,0,0,0),"npc"),
-    panel.background = element_rect(fill = background, color = background),
+    panel.background = element_rect(fill = "transparent", color = "transparent"),
     panel.spacing = unit(c(0,0,0,0), "npc"),
     legend.position = "none"
   )
 }
-
-kobe_theme <- function() {
+bar_theme <- function(){
   theme(
-    plot.background = element_rect(fill = "#E2E2E3", colour = "#E2E2E3"),
-    panel.background = element_rect(fill = "#E2E2E3"),
-    #panel.background = element_rect(fill = "white"),
-    axis.text = element_text(colour = "#E7A922", family = "Impact"),
-    plot.title = element_text(colour = "#552683", face = "bold", size = 18, vjust = 1, family = "Impact"),
-    axis.title = element_text(colour = "#552683", face = "bold", size = 13, family = "Impact"),
-    panel.grid.major.x = element_line(colour = "#E7A922"),
+    plot.background = element_rect(fill = "transparent", colour = "transparent"),
+    plot.margin = unit(c(-.05,-.05,-.05,-.05),"npc"),
+    panel.background = element_rect(fill = "transparent", color = "transparent"),
+    panel.spacing = unit(c(0,0,0,0), "npc"),
+    legend.position = "none",
+    axis.text = element_blank(),
+    panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
-    strip.text = element_text(family = "Impact", colour = "white"),
-    strip.background = element_rect(fill = "#E7A922"),
-    axis.ticks = element_line(colour = "#E7A922")
-  )
-}
-
-kobe_theme2 <- function() {
-  theme(
-    legend.position = "bottom", legend.title = element_text(family = "Impact", colour = "#552683", size = 10),
-    legend.background = element_rect(fill = "#E2E2E3"),
-    legend.key = element_rect(fill = "#E2E2E3", colour = "#E2E2E3"),
-    legend.text = element_text(family = "Impact", colour = "#E7A922", size = 10),
-    plot.background = element_rect(fill = "#E2E2E3", colour = "#E2E2E3"),
-    panel.background = element_rect(fill = "#E2E2E3"),
-    #panel.background = element_rect(fill = "white"),
-    axis.text = element_text(colour = "#E7A922", family = "Impact"),
-    plot.title = element_text(colour = "#552683", face = "bold", size = 18, vjust = 1, family = "Impact"),
-    axis.title = element_text(colour = "#552683", face = "bold", size = 13, family = "Impact"),
-    panel.grid.major.y = element_line(colour = "#E7A922"),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    strip.text = element_text(family = "Impact", colour = "white"),
-    strip.background = element_rect(fill = "#E7A922"),
-    axis.ticks = element_line(colour = "#E7A922")
   )
 }
 
@@ -78,18 +52,28 @@ library(plyr)
 library(dplyr)
 library(RSQLite)
 library(RColorBrewer)
-
+library(tidyr)
+library(stringi)
+library(extrafont)
+library(useful)
+#font_import()
+loadfonts()
 
 # check to see if the twitter-util.R script is loaded
-if(!exists("twitterutilversion", mode="function")) source("~/code/Hap.py-Rob.ot/R/twitter-util.R")
+if(!exists("twitterutilversion", mode="function")) source("/Users/Tim/code/Hap.py-Rob.ot/R/twitter-util.R")
 # check to see if the plot-util.R script is loaded
-if(!exists("plotutilversion", mode="function")) source("~/code/Hap.py-Rob.ot/R/plot-util.R")
-source("~/code/Hap.py-Rob.ot/R/plot-util.R")
+if(!exists("plotutilversion", mode="function")) source("/Users/Tim/code/Hap.py-Rob.ot/R/plot-util.R")
+#source("~/code/Hap.py-Rob.ot/R/plot-util.R")
 
 #Read in todays Trends from database
-db <- dbConnect(SQLite(), dbname="~/data/Test.sqlite")
+db <- dbConnect(SQLite(), dbname=db_name)
+table_exits <- dbExistsTable(conn = db,name = "trends")
+dbDisconnect(db)
+if(!table_exits){
+  stop()
+}
+db <- dbConnect(SQLite(), dbname=db_name)
 todaysTrends <- dbReadTable(conn = db, name = "trends")
-#dbRemoveTable(conn = db, name = trends)
 dbDisconnect(db)
 
 #########################################################
@@ -114,7 +98,7 @@ topTags <- as.character(tagCount$Var1[1:5])
 keys <- twkeys()
 token <- twitteR::setup_twitter_oauth(keys$consumer_key,keys$consumer_secret,keys$access_token,keys$access_secret)
 
-tweetList <- twitteR::searchTwitter(query, n=500)
+tweetList <- twitteR::searchTwitter(query, n=5000)
 
 tweets <- twitteR::twListToDF(tweetList)
 noun <- twRemoveUserNames(tweets$text)
@@ -143,62 +127,39 @@ library(reshape2)
 library(dplyr )
 mySentiment <- get_nrc_sentiment(sentimentTweets)  
 sentimentTweets <- cbind(sentimentTweets, mySentiment)
-
 sentimentTotals <- data.frame(colSums(sentimentTweets[,c(2:11)]))
 names(sentimentTotals) <- "count"
 sentimentTotals <- cbind("sentiment" = rownames(sentimentTotals), sentimentTotals)
 rownames(sentimentTotals) <- NULL
+# Split out the subsets
 emotionTotals <- sentimentTotals[1:8,]
+emotionMax <- max(emotionTotals$count)
 positiveNegative <- sentimentTotals[9:10,]
 
-
-#par(bg = med1, fig=c(0.25,0.75,0.6,0.9))
-p1 <- ggplot(data = sentimentTotals, aes(x = sentiment, y = count)) +
-  geom_bar(aes(fill = sentiment), stat = "identity") +
-  theme(legend.position = "none") +
-  xlab("Sentiment") + ylab("Total Count") + ggtitle("Total Sentiment Score for All Tweets")
-
-p1
-p1+kobe_theme()
 #########################################################
 # Sentiment Plots for the infographic
 #########################################################
-library(tidyr)
-
-max <- max(emotionTotals$count)
-emotionTotals$percent = (emotionTotals$count / max )* 4 + 3
-rad <- select(emotionTotals,sentiment, percent)
-tran <- spread(rad,key=sentiment, value=percent)
-tran <- cbind(group = "Sentiment", tran)
-p2 <- radarPlot(tran, grid.max = 7, 
-              grid.min = 0, centre.y = 0, plot.legend = FALSE, 
-              font.radar = "Arial", axis.label.size = 1.5, 
-              group.line.width = 0.25, group.point.size = 0.33,grid.line.width=0.25,
-              background.circle.colour = background,
-              axis.line.colour = main, 
-              gridline.max.colour = main, gridline.min.colour = main, gridline.mid.colour = main,
-              group.colour = c(accent),values.radar = c(""), axis.label.colour = accent,label.gridline.min = FALSE
-              )
-p2
-radarPlot <- p2 + basic_theme()
-radarPlot
-
-library(ggplot2)
-y1 <- round(rnorm(n = 36, mean = 7, sd = 2)) # Simulate data from normal distribution
-y2 <- round(rnorm(n = 36, mean = 21, sd = 6))
-y3 <- round(rnorm(n = 36, mean = 50, sd = 8))
-x <- rep(LETTERS[1:12], 3)
-grp <- rep(c("Grp 1", "Grp 2", "Grp 3"), each = 12)
-dat <- data.frame(grp, x, y1, y2, y3)
-
-p3 <- ggplot(data = dat, aes(x = reorder(x, rep(1:12, 3)), y = y3, group = factor(grp))) +
-  geom_bar(stat = "identity", fill = "#552683") + coord_polar() + facet_grid(. ~ grp) +
-  ylab("Y LABEL") + xlab("X LABEL") + ggtitle("TITLE OF THE FIGURE")
-p3
-p3 + kobe_theme2()
 
 
+emotionTotals <- dplyr::bind_cols(emotionTotals,data.frame("posneg"=c(-1,1,-1,-1,1,-1,1,1)))
+emotionTotals$value <- (emotionTotals$count * emotionTotals$posneg / emotionMax * 100)
+#emotionTotals$percent1 <- emotionTotals$percent * emotionTotals$posneg
+emotionTotals$sentiment <- stri_trans_totitle(emotionTotals$sentiment)
+emotionTotals$pltcolour <- ifelse(emotionTotals$value < 0, info.accent, info.main)
+emotionTotals$hjust <- ifelse(emotionTotals$value > 0, 1.1, -0.1)
+emotionTotals <- arrange(emotionTotals, value)
+emotionTotals <- transform(emotionTotals, sentiment = reorder(sentiment, value))
+plotcolors=c(info.accent,info.accent,info.accent,info.accent,info.main,info.main,info.main,info.main)
 
+emotionGraph <-ggplot(emotionTotals, aes(sentiment, value, label = sentiment, hjust = hjust)) + 
+  #geom_bar(stat = "identity", aes(fill = colour))
+  geom_text(aes(y = 0, colour = sentiment, family=info.font),size=1.75, color=plotcolors) + 
+  geom_bar(stat = "identity", aes(fill = sentiment), width = 0.5, color=plotcolors, fill=plotcolors) +
+  coord_flip() + labs(x = "", y = "") +
+  scale_x_discrete(breaks = NULL) + 
+  theme(legend.position = "none") + scale_y_continuous(limits=c(-110, 110)) + #scale_x_continuous(expand = c(0,0)) + 
+  bar_theme()
+emotionGraph
 
 
 #########################################################
@@ -212,6 +173,7 @@ donutData <- positiveNegative # = data.frame(count=c(10, 60, 30), category=c("A"
 donutData$fraction = donutData$count / sum(donutData$count)
 #donutData = donutData[order(donutData$sentiment), ]
 donutData <- dplyr::arrange(donutData,desc(sentiment))
+donutData <- transform(donutData, sentiment = reorder(sentiment, count))
 donutData$ymax = cumsum(donutData$fraction) +0.0
 donutData$ymin = c(0, head(donutData$ymax, n=-1)) +0.0
 donutData$ymid = ((donutData$ymax - donutData$ymin)/2) + donutData$ymin
@@ -219,10 +181,12 @@ donutData$ymid = ((donutData$ymax - donutData$ymin)/2) + donutData$ymin
 
 
 # Make the plot
-p4 = ggplot(donutData, aes(fill=sentiment, ymax=ymax, ymin=ymin, xmax=4, xmin=2.5)) +
-  geom_rect(fill=c(accent,main)) +
+donutPlot = ggplot(donutData, aes(fill=sentiment, ymax=ymax, ymin=ymin, xmax=4, xmin=2.5)) +
+#donutPlot <- ggplot(donutData, aes(fill=sentiment, ymax=ymax, ymin=ymin)) + #, xmax=4, xmin=2.5)) +
+  #scale_x_continuous(limits = c(0, 4), expand = c(0,0)) +  #scale_y_continuous(limits = c(ymin, ymax), expand = c(0,0)) +
+  geom_rect(fill=c(info.main,info.accent), xmax=4, xmin=2.5) +
   #scale_fill_manual(name="Overall Sentiment", values = c(accent, main), label=c("Negative","Positive")) +  
-  geom_text( aes(label = paste(round(fraction * 100, digits = 0),"%",sep=""), y=donutData$ymid, x = 3.25), size=2, fontface="bold", color=background)+
+  geom_text( aes(label = paste(round(fraction * 100, digits = 0),"%",sep=""), y=donutData$ymid, x = 3.25), size=1.75, fontface="bold", color=info.background)+
   coord_polar(theta="y") +
   xlim(c(0, 4)) +
   theme(#legend.text=element_text(size=3, family="Arial", color = highlight),
@@ -240,30 +204,10 @@ p4 = ggplot(donutData, aes(fill=sentiment, ymax=ymax, ymin=ymin, xmax=4, xmin=2.
   #ggplot2::annotate("text", x = 0, y = 0, label = "plus minus !", color=highlight) +
   labs(title="")
 #par(mar=c(0,0,0,0))
-p4
-donutPlot <- p4 + basic_theme()
-p4 + kobe_theme2()
+donutPlot
+donutPlot <- donutPlot + basic_theme()
 
-# Create test data.
-dat = data.frame(count=c(10, 60, 30), category=c("A", "B", "C"))
 
-# Add addition columns, needed for drawing with geom_rect.
-dat$fraction = dat$count / sum(dat$count)
-dat = dat[order(dat$fraction), ]
-dat$ymax = cumsum(dat$fraction)
-dat$ymin = c(0, head(dat$ymax, n=-1))
-
-# Make the plot
-pt = ggplot(dat, aes(fill=category, ymax=ymax, ymin=ymin, xmax=4, xmin=3)) +
-  geom_rect() +
-  coord_polar(theta="y") +
-  xlim(c(0, 4)) +
-  theme(panel.grid=element_blank()) +
-  theme(axis.text=element_blank()) +
-  theme(axis.ticks=element_blank()) +
-  ggplot2::annotate("text", x = 0, y = 0, label = "My Ring plot !") +
-  labs(title="")
-pt + basic_theme()
 #########################################################
 # Word Cloud
 #########################################################
@@ -353,10 +297,7 @@ wordcloud(words = d$word, freq = d$freq, min.freq = 1,max.words=200, random.orde
 #########################################################
 
 library(grid)
-library(extrafont)
-library(useful)
-#font_import()
-loadfonts()
+
 #fonts()
 
 
@@ -364,35 +305,53 @@ loadfonts()
 #print(p1, vp = vp4)
 
 
-png("~/data/images/daily-trends.png", width = 4, height = 3, units = "in", res = 500)
+png("/Users/Tim/data/images/daily-trends.png", width = 4, height = 3, units = "in", res = 500)
 # Plot the word cloud (will force a new page)
-par(bg = background, fig=c(0.1,0.9,0.1,0.9), mar=c(0,0,0,0))
-wordcloud(words = d$word, freq = d$freq, scale = c(2,0.25), min.freq = 1,max.words=200, random.order=FALSE, rot.per=0.35, colors=c(accent, main, highlight))
-vpDonut <- viewport(x = 0.5, y = 0.75, w = 1.1, h = 1.0)
-vpRadar <- viewport(x = 0.5, y = 0.25, w = 1.0, h = 1.0)
+par(bg = info.background, fig=c(0.1,0.9,0.1,0.9), mar=c(0,0,0,0))
+wordcloud(words = d$word, freq = d$freq, scale = c(2,0.25), min.freq = 1,max.words=200, random.order=FALSE, rot.per=0.35, family = info.font, colors=c(info.main, info.main.light, info.accent))
 vp1 <- viewport(x = 0, y = 0.85, w = 1.0, h = 0.15, just = c("left", "bottom"), name = "vp1")
 pushViewport(vp1)
-grid.rect(gp = gpar(fill = background, col = background))
-grid.text("#DailyTwitterTrend", vjust = 0, y = unit(0.1, "npc"), gp = gpar(fontfamily = "Impact", col = main, cex = 0.8))
+grid.rect(gp = gpar(fill = info.background, col = info.background))
+grid.text("#DailyTwitterTrend", vjust = 0, y = unit(0.5, "npc"), gp = gpar(fontfamily = info.font, col = info.highlight, cex = 1.6))
+grid.text(paste("The top trend for", format(Sys.Date(), format="%B %d, %Y"), "is", topTags[1],sep = " "), vjust = 0, y = unit(0.1, "npc"), gp = gpar(fontfamily = info.font, col = info.highlight, cex = 0.8))
 upViewport()
+
+#Right Pane
 vp2 <- viewport(x = 0.77, y = 0.0, w = 0.23, h = 0.85, just = c("left", "bottom"), name = "vp2")
+vpEmotion <- viewport(x = 0.0, y = 0.85, w = 1.0, h = 0.5, just = c("left", "top"))
 pushViewport(vp2)
-grid.rect(gp = gpar(fill = dark2, col = dark2))
-grid.text("Top 5 Trends", vjust = 0, y = unit(0.9, "npc"), gp = gpar(fontfamily = "Impact", col = med1, cex = 0.7))
+print(emotionGraph, vp=vpEmotion)
+grid.text("Tweet Emotions", vjust = 0, y = unit(0.9, "npc"), gp = gpar(fontfamily = info.font, col = info.highlight, cex = 0.65))
+grid.text(paste(
+  "Infographic",
+  "created by",
+  "@Hap_py_Rob_ot",
+  "https://git.io/vQWQn",
+  sep = "\n"), vjust = 0, hjust = 0, x = unit(0.02, "npc"), y = unit(0.05, "npc"), gp = gpar(fontfamily = info.font, col = info.main, cex = 0.5))
+
+upViewport()
+
+#Left Pane
+vp3 <- viewport(x = 0.0, y = 0.0, w = 0.23, h = 0.85, just = c("left", "bottom"), name = "vp3")
+vpDonut <- viewport(x = 0.5, y = 0.75, w = 1.0, h = 1.0)
+pushViewport(vp3)
+#grid.rect(gp = gpar(fill = info.background, col = info.accent.light))
+print(donutPlot, vp=vpDonut)
+grid.text("Sentiment Analysis", vjust = 0, y = unit(0.9, "npc"), gp = gpar(fontfamily = info.font, col = info.highlight, cex = 0.65))
+grid.text("Positive Sentiment", vjust = 0, y = unit(0.53, "npc"), gp = gpar(fontfamily = info.font, col = info.main, cex = 0.4))
+grid.text("Negative Sentiment", vjust = 0, y = unit(0.5, "npc"), gp = gpar(fontfamily = info.font, col = info.accent, cex = 0.4))
+#grid.rect(gp = gpar(fill = info.background, col = info.background))
+grid.text("Top 5 Trends", vjust = 0, y = unit(0.35, "npc"), gp = gpar(fontfamily = info.font, col = info.highlight, cex = 0.65))
 grid.text(paste(
   topTags[1],
   topTags[2],
   topTags[3],
   topTags[4],
-  topTags[5], sep = "\n"), vjust = 0, hjust = 0, x = unit(0.01, "npc"), y = unit(0.5, "npc"), gp = gpar( col = main, cex = 0.5))
-upViewport()
-vp3 <- viewport(x = 0.0, y = 0.0, w = 0.23, h = 0.85, just = c("left", "bottom"), name = "vp3")
-pushViewport(vp3)
-grid.rect(gp = gpar(fill = med1, col = med1))
-print(donutPlot, vp=vpDonut)
-print(radarPlot, vp=vpRadar)
-grid.text("Sentiment Analysis", vjust = 0, y = unit(0.9, "npc"), gp = gpar(fontfamily = "Impact", col = main, cex = 0.7))
-
+  topTags[5], sep = "\n"), vjust = 0, hjust = 0, x = unit(0.02, "npc"), y = unit(0.1, "npc"), gp = gpar(fontfamily = info.font, col = info.highlight, cex = 0.5))
 dev.off()
 
-
+#
+#Delete the trends
+db <- dbConnect(SQLite(), dbname=db_name)
+#dbRemoveTable(conn = db, name =  "trends")
+dbDisconnect(db)
