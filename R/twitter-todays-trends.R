@@ -353,5 +353,5 @@ dev.off()
 #
 #Delete the trends
 db <- dbConnect(SQLite(), dbname=db_name)
-#dbRemoveTable(conn = db, name =  "trends")
+dbRemoveTable(conn = db, name =  "trends")
 dbDisconnect(db)
