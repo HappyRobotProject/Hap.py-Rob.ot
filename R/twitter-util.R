@@ -1,7 +1,7 @@
 #
 # Twitter Helper Functions
 #
-
+setwd("/Users/tim/data")
 # Load libraries
 library(stringr)
 
@@ -11,15 +11,32 @@ twitterutilversion <- function(){
   return("0.0.1")
 }
 
+twPath <- function(){
+  return("/Users/tim/data")
+}
+
 
 # Extract authentication keys from a csv file
 twkeys <- function(){
-  auth <-read.csv(file = "~/data/auth/twitter-HRP.csv", header = TRUE, stringsAsFactors = FALSE)
+  fileName <- paste(twPath(),"/auth/twitter-HRP.csv", sep = "")
+  auth <-read.csv(file = fileName, header = TRUE, stringsAsFactors = FALSE)
   ck <- auth$consumer.key
   cs <- auth$consumer.secret
   at <- auth$access.token
   as <- auth$access.secret
-  return (list(consumer_key=ck,consumer_secret=cs,access_token=at,access_secret=as))
+  an <- auth$appname
+  return (list(consumer_key=ck,consumer_secret=cs,access_token=at,access_secret=as,app_name=an))
+}
+
+twSetRtweetToken <- function(token){
+  fileName <- paste(twPath(),"/auth/rtweet-token-HRP.rds", sep = "")
+  ## save token
+  saveRDS(token, file = fileName)
+}
+twGetRtweetToken <- function(){
+  fileName <- paste(twPath(),"/auth/rtweet-token-HRP.rds", sep = "")
+  ## read token
+  token <- readRDS(file = fileName)
 }
 
 twRemoveUserNames <- function(tweets){
