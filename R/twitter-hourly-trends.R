@@ -2,6 +2,8 @@
 #
 #
 setwd("/Users/tim/data")
+db_name <- "/Users/tim/data/HRP-DailyTrends.sqlite"
+
 #Libraries
 library(twitteR)
 library(plyr)
@@ -20,7 +22,7 @@ trends <- twitteR::getTrends(23424977)
 
 library(RSQLite)
 library(sqldf)
-db <- dbConnect(SQLite(), dbname="/Users/tim/data/Test.sqlite")
+db <- dbConnect(SQLite(), dbname=db_name)
 dbWriteTable(conn = db, name = "trends", value = trends, row.names = FALSE, append = TRUE)
 dbDisconnect(db)
 

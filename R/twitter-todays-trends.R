@@ -5,7 +5,14 @@
 # Script Setup
 #########################################################
 setwd("/Users/tim/data")
-db_name <- "/Users/tim/data/Test.sqlite"
+db_name <- "/Users/tim/data/HRP-DailyTrends.sqlite"
+db_connections <- "/Users/tim/data/HRP-Network.sqlite"
+#########################################################
+# Library
+#########################################################
+library(stringi)
+library(dplyr)
+library(RSQLite)
 
 #Fonts
 info.font <- "Impact"
@@ -101,16 +108,42 @@ token <- twitteR::setup_twitter_oauth(keys$consumer_key,keys$consumer_secret,key
 tweetList <- twitteR::searchTwitter(query, n=5000)
 
 tweets <- twitteR::twListToDF(tweetList)
-noun <- twRemoveUserNames(tweets$text)
-noht <- twRemoveHashtags(tweets$text)
-un <- twExtractUserNames(tweets$text)
-ht <- twExtractHashtags(tweets$text)
+authors <- tweets$screenName
+mentions <- as.data.frame(table(unlist(twExtractUserNames(tweets$text))))
+mentions <- arrange(mentions, desc(Freq))[1:10,]
+authors <- as.data.frame(table(unlist(tweets$screenName)))
+authors <- arrange(authors, desc(Freq))[1:10,]
 
-undf <- plyr::ldply(un, rbind)
+#Check to see if we follow these people all ready
+dbConnections <- dbConnect(SQLite(), dbname=db_connections)
 
-occurences <- table(unlist(un))
-querydf <- as.data.frame(occurences)
-querydf <- arrange(querydf,desc(Freq))
+findScreenName <- function(screen_name){
+  results <- dbGetQuery(conn = dbConnections,"Select * from twitter_connections where screenname = ?", str_replace_all(stri_trans_tolower(screen_name),"@",""))
+  return(nrow(results)>0)
+}
+
+follow <- mentions %>%
+  rowwise() %>%
+  mutate(sn_exists = findScreenName(Var1)) %>%
+  filter(sn_exists == FALSE) %>%
+  top_n(1,Freq) %>%
+  select(screen_name = Var1)
+follow$screen_name <- as.character(follow$screen_name)
+follow <- follow[1,]
+
+dbWriteTable(conn = dbConnections,"twitter_to_follow", follow, append = TRUE)
+
+follow <- authors %>%
+  rowwise() %>%
+  mutate(sn_exists = findScreenName(Var1)) %>%
+  filter(sn_exists == FALSE) %>%
+  top_n(1,Freq) %>%
+  select(screen_name = Var1)
+follow$screen_name <- as.character(follow$screen_name)
+follow <- follow[1,]
+
+dbWriteTable(conn = dbConnections,"twitter_to_follow", follow, append = TRUE)
+dbDisconnect(dbConnections)
 
 
 #########################################################
