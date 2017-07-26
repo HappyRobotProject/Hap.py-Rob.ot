@@ -123,9 +123,9 @@ findScreenName <- function(screen_name){
 }
 
 follow <- mentions %>%
-  rowwise() %>%
-  mutate(sn_exists = findScreenName(Var1)) %>%
-  filter(sn_exists == FALSE) %>%
+  dplyr::rowwise() %>%
+  dplyr::mutate(sn_exists = findScreenName(Var1)) %>%
+  dplyr::filter(sn_exists == FALSE) %>%
   top_n(1,Freq) %>%
   select(screen_name = Var1)
 follow$screen_name <- as.character(follow$screen_name)
@@ -134,9 +134,9 @@ follow <- follow[1,]
 dbWriteTable(conn = dbConnections,"twitter_to_follow", follow, append = TRUE)
 
 follow <- authors %>%
-  rowwise() %>%
-  mutate(sn_exists = findScreenName(Var1)) %>%
-  filter(sn_exists == FALSE) %>%
+  dplyr::rowwise() %>%
+  dplyr::mutate(sn_exists = findScreenName(Var1)) %>%
+  dplyr::filter(sn_exists == FALSE) %>%
   top_n(1,Freq) %>%
   select(screen_name = Var1)
 follow$screen_name <- as.character(follow$screen_name)
@@ -388,3 +388,4 @@ dev.off()
 db <- dbConnect(SQLite(), dbname=db_name)
 dbRemoveTable(conn = db, name =  "trends")
 dbDisconnect(db)
+
