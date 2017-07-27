@@ -91,6 +91,8 @@ queryCount <- arrange(queryCount,desc(Freq))
 #Get the most popular trend
 query <- as.character(queryCount$Var1[1])
 
+write.csv(data.frame(trend=query),"todays-trend.csv")
+
 #########################################################
 # Get the Top 5 Popular trends
 #########################################################
@@ -130,6 +132,7 @@ follow <- mentions %>%
   select(screen_name = Var1)
 follow$screen_name <- as.character(follow$screen_name)
 follow <- follow[1,]
+follow$screen_name <- str_replace_all(stri_trans_tolower(follow$screen_name),"@","")
 
 dbWriteTable(conn = dbConnections,"twitter_to_follow", follow, append = TRUE)
 
@@ -141,6 +144,7 @@ follow <- authors %>%
   select(screen_name = Var1)
 follow$screen_name <- as.character(follow$screen_name)
 follow <- follow[1,]
+follow$screen_name <- str_replace_all(stri_trans_tolower(follow$screen_name),"@","")
 
 dbWriteTable(conn = dbConnections,"twitter_to_follow", follow, append = TRUE)
 dbDisconnect(dbConnections)

@@ -48,6 +48,7 @@ install.packages("extrafont")
 library(extrafont)
 font_import() # Import all fonts
 fonts() # Print list of all fonts
+install.packages("jsonlite")
 
 
 

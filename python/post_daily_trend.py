@@ -13,8 +13,8 @@ consec = authKeys.iloc[0,1]
 acctok = authKeys.iloc[0,2]
 accsec = authKeys.iloc[0,3]
 
-trends = pd.read_csv("todays-trend.csv", header=0)
-topTrend = trends.iloc[0,0]
+trends = pd.read_csv("/Users/tim/data/todays-trend.csv", header=0)
+topTrend = trends.iloc[0,1]
 
 twitter = tw.Twython(conkey,consec,acctok,accsec)
 daily_trend = "/Users/tim/data/images/daily-trends.png"
