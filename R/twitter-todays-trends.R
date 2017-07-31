@@ -90,8 +90,17 @@ queryCount <- as.data.frame(table(unlist(todaysTrends$query)))
 queryCount <- arrange(queryCount,desc(Freq))
 #Get the most popular trend
 query <- as.character(queryCount$Var1[1])
+queryTerm <- query
 
-write.csv(data.frame(trend=query),"todays-trend.csv")
+filtered_trends <- dplyr::filter(todaysTrends, query == queryTerm)
+trendName <- filtered_trends$name[1]
+
+write.csv(data.frame(trend=trendName),"todays-trend.csv")
+
+db <- dbConnect(SQLite(), dbname=db_name)
+dbWriteTable(conn = db,"todays_trends", data.frame(trend = trendName, date = as.character(Sys.Date())), append = TRUE)
+dbDisconnect(db)
+
 
 #########################################################
 # Get the Top 5 Popular trends
@@ -350,7 +359,7 @@ vp1 <- viewport(x = 0, y = 0.85, w = 1.0, h = 0.15, just = c("left", "bottom"), 
 pushViewport(vp1)
 grid.rect(gp = gpar(fill = info.background, col = info.background))
 grid.text("#DailyTwitterTrend", vjust = 0, y = unit(0.5, "npc"), gp = gpar(fontfamily = info.font, col = info.highlight, cex = 1.6))
-grid.text(paste("The top trend for", format(Sys.Date(), format="%B %d, %Y"), "is", topTags[1],sep = " "), vjust = 0, y = unit(0.1, "npc"), gp = gpar(fontfamily = info.font, col = info.highlight, cex = 0.8))
+grid.text(paste("The top trend for", format(Sys.Date(), format="%B %d, %Y"), "is", trendName,sep = " "), vjust = 0, y = unit(0.1, "npc"), gp = gpar(fontfamily = info.font, col = info.highlight, cex = 0.8))
 upViewport()
 
 #Right Pane
