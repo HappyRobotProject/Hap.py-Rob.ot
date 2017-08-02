@@ -16,6 +16,27 @@ library(rtweet)
 # check to see if the twitter-util.R script is loaded
 if(!exists("twitterutilversion", mode="function")) source("/Users/Tim/code/Hap.py-Rob.ot/R/twitter-util.R")
 
+#########################################################
+# helper functions
+#########################################################
+processScreenname <- function(screen_name){
+  return (str_replace_all(stri_trans_tolower(as.character(screen_name)),"@",""))
+}
+
+updateFollows <- function(screen_name, following){
+  if(is.na(following)){
+    # Not currently following Insert a new row
+    print("Insert")
+    results <- dbSendStatement(conn = dbConnections,"Insert into twitter_connections ('screenname', 'follows', 'follows_on') values (:sn, 1, :ts)", param = list(sn=screen_name, ts=as.character(Sys.Date())))
+  } else {
+    #Update the row
+    print("Update")
+    results <- dbSendStatement(conn = dbConnections,"Update twitter_connections set follows = 1, follows_on = :ts where  screenname = :sn", param = list(sn=screen_name, ts=as.character(Sys.Date())))
+  }
+  print(results)
+  return(1)
+}
+
 
 #########################################################
 # Check followers to follow back
@@ -26,24 +47,26 @@ tokn <- twGetRtweetToken()
 #check to see if we have any followers to follow
 follower_ids <- get_followers("Hap_py_Rob_ot",token=tokn)
 follower_data <- lookup_users(follower_ids$user_id, token = tokn)
-followers <- dplyr::select(follower_data, screen_name, user_id)
+followers <- dplyr::select(follower_data, screenname = screen_name, user_id)
 
 #Check to see if we follow these people all ready
 dbConnections <- dbConnect(SQLite(), dbname=db_connections)
+twitter_connections <- dbReadTable(conn = dbConnections, "twitter_connections")
 
-findScreenName <- function(screen_name){
-  results <- dbGetQuery(conn = dbConnections,"Select * from twitter_connections where screenname = ?", str_replace_all(stri_trans_tolower(screen_name),"@",""))
-  return(nrow(results)>0)
-}
+followers <- followers %>%
+  mutate(screenname =processScreenname(screenname)) %>%
+  dplyr::full_join(twitter_connections, by = "screenname") 
 
-follow <- followers %>%
-  dplyr::rowwise() %>%
-  dplyr::mutate(sn_exists = findScreenName(screen_name)) %>%
-  dplyr::filter(sn_exists == FALSE) %>%
-  select(screen_name)
-follow$screen_name <- as.character(follow$screen_name)
-follow$screen_name <- str_replace_all(stri_trans_tolower(follow$screen_name),"@","")
-f1 <- data_frame(screen_name = follow$screen_name)
+followersToUpdate <- followers %>%
+  dplyr::filter(!is.na(user_id) & is.na(follows)) %>%
+  rowwise() %>%
+  mutate(follows = updateFollows(screenname, following))
+
+
+followersToFollow <- followers %>%
+  dplyr::filter(!is.na(user_id) & is.na(following)) %>%
+  select(screen_name = screenname)
+f1 <- data_frame(screen_name = followersToFollow$screen_name)
 dbWriteTable(conn = dbConnections,"twitter_to_follow", f1, append = TRUE)
 dbDisconnect(dbConnections)
 
