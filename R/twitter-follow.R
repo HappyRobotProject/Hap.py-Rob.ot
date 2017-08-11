@@ -37,6 +37,14 @@ updateFollows <- function(screen_name, following){
   return(1)
 }
 
+updateToFollow <- function(screenname){
+  sn <- str_replace_all(stri_trans_tolower(screenname),"@","")
+  print(paste("following",sn, sep = ":"))
+  dbSendStatement(conn = dbConnections,"Update twitter_connections set following = 1, following_on = :ts where screenname = :sn", param = list(sn=sn, ts=as.character(Sys.Date())))
+  result <- post_follow(user = sn, token = tokn)
+  return(result$status_code)
+}
+
 
 #########################################################
 # Check followers to follow back
@@ -62,12 +70,13 @@ followersToUpdate <- followers %>%
   rowwise() %>%
   mutate(follows = updateFollows(screenname, following))
 
+filtered_connections <- dbReadTable(conn = dbConnections, "twitter_connections") %>%
+  filter(is.na(following))
 
-followersToFollow <- followers %>%
-  dplyr::filter(!is.na(user_id) & is.na(following)) %>%
-  select(screen_name = screenname)
-f1 <- data_frame(screen_name = followersToFollow$screen_name)
-dbWriteTable(conn = dbConnections,"twitter_to_follow", f1, append = TRUE)
+result <- filtered_connections %>%
+  dplyr::rowwise() %>%
+  dplyr::mutate(followed = updateToFollow(screenname)) 
+
 dbDisconnect(dbConnections)
 
 #########################################################

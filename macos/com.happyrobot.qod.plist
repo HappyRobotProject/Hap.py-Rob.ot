@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
         <key>Label</key>
-        <string>com.happyrobot.hourly</string>
+        <string>com.happyrobot.qod</string>
 
         <key>ProgramArguments</key>
         <array>
