@@ -59,24 +59,30 @@ followers <- dplyr::select(follower_data, screenname = screen_name, user_id)
 
 #Check to see if we follow these people all ready
 dbConnections <- dbConnect(SQLite(), dbname=db_connections)
-twitter_connections <- dbReadTable(conn = dbConnections, "twitter_connections")
+twitter_connections <- dbReadTable(conn = dbConnections, "twitter_connections") %>%
+  select(-user_id)
 
 followers <- followers %>%
   mutate(screenname =processScreenname(screenname)) %>%
-  dplyr::full_join(twitter_connections, by = "screenname") 
+  dplyr::full_join(twitter_connections, by = c("screenname")) 
 
 followersToUpdate <- followers %>%
-  dplyr::filter(!is.na(user_id) & is.na(follows)) %>%
-  rowwise() %>%
-  mutate(follows = updateFollows(screenname, following))
+  dplyr::filter(!is.na(user_id) & is.na(follows)) 
+
+if (nrow(followersToUpdate) > 0){
+  followersToUpdate %>%
+    rowwise() %>%
+    mutate(follows = updateFollows(screenname, following))
+}
 
 filtered_connections <- dbReadTable(conn = dbConnections, "twitter_connections") %>%
   filter(is.na(following))
 
-result <- filtered_connections %>%
-  dplyr::rowwise() %>%
-  dplyr::mutate(followed = updateToFollow(screenname)) 
-
+if (nrow(filtered_connections) > 0){
+  result <- filtered_connections %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(followed = updateToFollow(screenname)) 
+}
 dbDisconnect(dbConnections)
 
 #########################################################
@@ -95,10 +101,11 @@ followScreenName <- function(screen_name, token){
   return(result$status_code)
 }
 
-result <- to_follow %>%
-  dplyr::rowwise() %>%
-  dplyr::mutate(followed = followScreenName(screen_name)) 
-
+if(nrow(to_follow)) {
+  result <- to_follow %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(followed = followScreenName(screen_name)) 
+}
 #drop the table
 dbRemoveTable(conn = dbConnections, name =  "twitter_to_follow")
 dbDisconnect(dbConnections)
