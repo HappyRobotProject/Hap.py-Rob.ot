@@ -22,7 +22,7 @@ keys <- twkeys()
 token <- twitteR::setup_twitter_oauth(keys$consumer_key,keys$consumer_secret,keys$access_token,keys$access_secret)
 
 dm_list <- dmGet()
-messages <- data.frame(id=character(),text=character(),len=integer(), sender_id = character(), sender_screen_name = character(), stringsAsFactors = FALSE)
+messages <- data.frame(id=character(),text=character(),len=integer(), sender_id = character(), sender_screen_name = character(), created = integer(), stringsAsFactors = FALSE)
 for (dm in dm_list){
   text <- dm$text
   len <- nchar(as.character(text))
@@ -30,7 +30,7 @@ for (dm in dm_list){
     senderID <- dm$senderID
     senderSN <- dm$senderSN
     id <- dm$id
-    message <- data.frame(id=as.character(id),text=as.character(text),len = len, sender_id = as.character(senderID), sender_screen_name = as.character(senderSN), stringsAsFactors = FALSE)
+    message <- data.frame(id=as.character(id),text=as.character(text),len = len, sender_id = as.character(senderID), sender_screen_name = as.character(senderSN), created = 0, stringsAsFactors = FALSE)
     messages <- bind_rows(messages, message)
   }
 }
@@ -39,5 +39,6 @@ for (dm in dm_list){
 if(nrow(messages)>0){
   db <- dbConnect(SQLite(), dbname=db_name)
   dbWriteTable(conn = db, name = "messages", value = messages, row.names = FALSE, append = TRUE)
+  print("Writing Table")
   dbDisconnect(db)
 }

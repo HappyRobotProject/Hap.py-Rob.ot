@@ -11,9 +11,51 @@ plotutilversion <- function(){
   return("0.0.1")
 }
 
+#########################################################
+# Themes
+#########################################################
+pltBasicTheme <- function(){
+  theme(
+    plot.background = element_rect(fill = "transparent", colour = "transparent"),
+    plot.margin = unit(c(0,0,0,0),"npc"),
+    panel.background = element_rect(fill = "transparent", color = "transparent"),
+    panel.spacing = unit(c(0,0,0,0), "npc"),
+    legend.position = "none"
+  )
+}
+pltBarTheme <- function(){
+  theme(
+    plot.background = element_rect(fill = "transparent", colour = "transparent"),
+    plot.margin = unit(c(-.05,-.05,-.05,-.05),"npc"),
+    panel.background = element_rect(fill = "transparent", color = "transparent"),
+    panel.spacing = unit(c(0,0,0,0), "npc"),
+    legend.position = "none",
+    axis.text = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank()
+  )
+}
+
+pltColorTheme <- function(){
+  #Fonts
+  response <- list(font = "Impact",
+                   background = "#2d3142",
+                   white = "#ffffff",
+                   main = "#7084a5",
+                   light = "#A1CEE0",
+                   accent = "#ef8354",
+                   accent.light = "#C52D41",
+                   highlight = "#bfc0c0",
+                   negative = "#ef8354",
+                   positive = "#7084a5" )
+  return(response)
+}
 
 
-radarPlot <- function(plot.data,
+
+pltRadar <- function(plot.data,
                     font.radar="Arial",
                     values.radar = c("0%", "50%", "100%"),                       
                     axis.labels=colnames(plot.data)[-1],                             
@@ -285,3 +327,133 @@ radarPlot <- function(plot.data,
   return(base)
   
 }
+
+
+
+
+
+pltEmotion <- function(emotionData){
+  colors <- pltColorTheme()
+  plotcolors=c(colors$negative,colors$negative,colors$negative,colors$negative,colors$positive,colors$positive,colors$positive,colors$positive)
+  emotionPlot <-ggplot(emotionData, aes(sentiment, value, label = sentiment, hjust = hjust)) + 
+    #geom_bar(stat = "identity", aes(fill = colour))
+    geom_text(aes(y = 0, colour = sentiment, family=colors$font),size=1.75, color=plotcolors) + 
+    geom_bar(stat = "identity", aes(fill = sentiment), width = 0.6, color=plotcolors, fill=plotcolors) +
+    coord_flip() + labs(x = "", y = "") +
+    scale_x_discrete(breaks = NULL) + 
+    theme(legend.position = "none") + scale_y_continuous(limits=c(-110, 110)) + #scale_x_continuous(expand = c(0,0)) + 
+    pltBarTheme()
+  return(emotionPlot)
+}
+
+
+
+pltDonut <- function(donutData){
+  #########################################################
+  # Positive / Negative Donut Chart
+  #########################################################
+  theme <- pltColorTheme()
+  
+  # Add addition columns, needed for drawing with geom_rect.
+  donutData$fraction = donutData$count / sum(donutData$count)
+  #donutData = donutData[order(donutData$sentiment), ]
+  donutData <- dplyr::arrange(donutData,desc(sentiment))
+  donutData <- transform(donutData, sentiment = reorder(sentiment, count))
+  donutData$ymax = cumsum(donutData$fraction) +0.0
+  donutData$ymin = c(0, head(donutData$ymax, n=-1)) +0.0
+  donutData$ymid = ((donutData$ymax - donutData$ymin)/2) + donutData$ymin
+  
+  # Make the plot
+  donutPlot = ggplot(donutData, aes(fill=sentiment, ymax=ymax, ymin=ymin, xmax=4, xmin=2.0)) +
+    #donutPlot <- ggplot(donutData, aes(fill=sentiment, ymax=ymax, ymin=ymin)) + #, xmax=4, xmin=2.5)) +
+    #scale_x_continuous(limits = c(0, 4), expand = c(0,0)) +  #scale_y_continuous(limits = c(ymin, ymax), expand = c(0,0)) +
+    geom_rect(fill=c(theme$positive,theme$negative), xmax=4, xmin=2.0) +
+    #scale_fill_manual(name="Overall Sentiment", values = c(accent, main), label=c("Negative","Positive")) +  
+    geom_text( aes(label = paste(round(fraction * 100, digits = 0),"%",sep=""), y=donutData$ymid, x = 3), size=2.25, fontface="bold", color=theme$background)+
+    coord_polar(theta="y") +
+    xlim(c(0, 4)) +
+    theme(#legend.text=element_text(size=3, family="Arial", color = highlight),
+      #legend.position = c(0.5,0.5),
+      #legend.box.margin = c(0,0,0,0),
+      #legend.key.size = unit(c(0.05,0.05),"npc"),
+      #legend.background = element_rect(fill = background, color = background),
+      #legend.key = element_rect(color=background, fill = background),
+      #legend.title = element_text(size=4, family="Arial", color = highlight),
+      axis.ticks=element_blank(),
+      axis.text=element_blank(),
+      axis.title=element_blank(),
+      panel.grid=element_blank(),
+      panel.border=element_blank())+
+    #ggplot2::annotate("text", x = 0, y = 0, label = "plus minus !", color=highlight) +
+    labs(title="")
+  #par(mar=c(0,0,0,0))
+  donutPlot
+  donutPlot <- donutPlot + pltBasicTheme()
+  
+  return(donutPlot)
+}
+
+
+
+pltCreateImage <- function(listData, filename =  "/Users/Tim/data/images/userInfographic.png"){
+  
+  library(grid)
+  result <- 0
+  theme <- pltColorTheme()
+  print(filename)
+  
+  
+  png(filename, width = 4, height = 3, units = "in", res = 500)
+  # Plot the word cloud (will force a new page)
+  par(bg = theme$background, fig=c(0.1,0.9,0.1,0.9), mar=c(0,0,0,0))
+  wordcloud(words = listData$tweetWords$word, freq = listData$tweetWords$freq, scale = c(2,0.25), min.freq = 1,max.words=200, random.order=FALSE, rot.per=0.35, family = theme$font, colors=c(theme$main, theme$main.light, theme$accent))
+  vp1 <- viewport(x = 0, y = 0.85, w = 1.0, h = 0.15, just = c("left", "bottom"), name = "vp1")
+  pushViewport(vp1)
+  grid.rect(gp = gpar(fill = theme$background, col = theme$background))
+  grid.text(listData$query, vjust = 0, y = unit(0.5, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 1.6))
+  grid.text(paste("Infographic created for",listData$sender,"on", format(Sys.Date(), format="%B %d, %Y"), sep = " "), vjust = 0, y = unit(0.1, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 0.8))
+  upViewport()
+  
+  #Right Pane
+  vp2 <- viewport(x = 0.77, y = 0.0, w = 0.23, h = 0.85, just = c("left", "bottom"), name = "vp2")
+  vpEmotion <- viewport(x = 0.0, y = 0.85, w = 1.0, h = 0.5, just = c("left", "top"))
+  pushViewport(vp2)
+  print(listData$emotionPlot, vp=vpEmotion)
+  grid.text("Tweet Emotions", vjust = 0, y = unit(0.9, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 0.65))
+  grid.text(paste(
+    "Infographic",
+    "created by",
+    "@Hap_py_Rob_ot",
+    "https://git.io/vQWQn",
+    sep = "\n"), vjust = 0, hjust = 0, x = unit(0.02, "npc"), y = unit(0.05, "npc"), gp = gpar(fontfamily = theme$font, col = theme$main, cex = 0.5))
+  
+  upViewport()
+  
+  #Left Pane
+  vp3 <- viewport(x = 0.0, y = 0.0, w = 0.23, h = 0.85, just = c("left", "bottom"), name = "vp3")
+  vpDonut <- viewport(x = 0.5, y = 0.75, w = 1.0, h = 1.0)
+  pushViewport(vp3)
+  #grid.rect(gp = gpar(fill = theme$background, col = theme$accent.light))
+  print(listData$donutPlot, vp=vpDonut)
+  grid.text("Sentiment Analysis", vjust = 0, y = unit(0.9, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 0.65))
+  grid.text("Positive Sentiment", vjust = 0, y = unit(0.53, "npc"), gp = gpar(fontfamily = theme$font, col = theme$main, cex = 0.4))
+  grid.text("Negative Sentiment", vjust = 0, y = unit(0.5, "npc"), gp = gpar(fontfamily = theme$font, col = theme$accent, cex = 0.4))
+  #Tweet Count
+  grid.text(listData$tweetCount, vjust = 0, y = unit(0.35, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 1.75))
+  grid.text("tweets", vjust = 0, y = unit(0.31, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 0.7))
+  
+  #grid.rect(gp = gpar(fill = theme$background, col = theme$background))
+  #grid.text("Top 5 Trends", vjust = 0, y = unit(0.35, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 0.65))
+  #grid.text(paste(
+  #  topTags[1],
+  #  topTags[2],
+  #  topTags[3],
+  #  topTags[4],
+  #  topTags[5], sep = "\n"), vjust = 0, hjust = 0, x = unit(0.02, "npc"), y = unit(0.1, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 0.5))
+  dev.off()
+  
+  result <- 1
+  return(result)
+}
+
+
