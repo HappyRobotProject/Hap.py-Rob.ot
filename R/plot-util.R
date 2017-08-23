@@ -409,7 +409,7 @@ pltCreateImage <- function(listData, filename =  "/Users/Tim/data/images/userInf
   png(filename, width = 4, height = 3, units = "in", res = 500)
   # Plot the word cloud (will force a new page)
   par(bg = theme$background, fig=c(0.1,0.9,0.1,0.9), mar=c(0,0,0,0))
-  wordcloud(words = listData$tweetWords$word, freq = listData$tweetWords$freq, scale = c(2,0.25), min.freq = 1,max.words=200, random.order=FALSE, rot.per=0.35, family = theme$font, colors=c(theme$main, theme$main.light, theme$accent))
+  wordcloud(words = listData$tweetWords$word, freq = listData$tweetWords$freq, scale = c(2,0.25), min.freq = 1,max.words=200, random.order=FALSE, rot.per=0.35, family = theme$font, colors=c(theme$main, theme$highlight, theme$accent))
   vp1 <- viewport(x = 0, y = 0.85, w = 1.0, h = 0.15, just = c("left", "bottom"), name = "vp1")
   pushViewport(vp1)
   grid.rect(gp = gpar(fill = theme$background, col = theme$background))
@@ -428,7 +428,7 @@ pltCreateImage <- function(listData, filename =  "/Users/Tim/data/images/userInf
     "created by",
     "@Hap_py_Rob_ot",
     "https://git.io/vQWQn",
-    sep = "\n"), vjust = 0, hjust = 0, x = unit(0.02, "npc"), y = unit(0.05, "npc"), gp = gpar(fontfamily = theme$font, col = theme$main, cex = 0.5))
+    sep = "\n"), vjust = 0, hjust = 0, x = unit(0.05, "npc"), y = unit(0.05, "npc"), gp = gpar(fontfamily = theme$font, col = theme$accent, cex = 0.5))
   
   upViewport()
   
@@ -446,13 +446,15 @@ pltCreateImage <- function(listData, filename =  "/Users/Tim/data/images/userInf
   grid.text("tweets", vjust = 0, y = unit(0.31, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 0.7))
   
   #grid.rect(gp = gpar(fill = theme$background, col = theme$background))
-  #grid.text("Top 5 Trends", vjust = 0, y = unit(0.35, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 0.65))
-  #grid.text(paste(
-  #  topTags[1],
-  #  topTags[2],
-  #  topTags[3],
-  #  topTags[4],
-  #  topTags[5], sep = "\n"), vjust = 0, hjust = 0, x = unit(0.02, "npc"), y = unit(0.1, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 0.5))
+  upViewport()
+  vp4 <- viewport(x = 0.50, y = 0.10, w = 0.7, h = 0.10, just = c("center", "top"), name = "vp4")
+  pushViewport(vp4)
+  #grid.rect(gp = gpar(fill = theme$accent, col = theme$accent))
+  grid.text("Get your own infographic", y = unit(0.88, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 0.4))
+  grid.text(paste(
+    "Follow @Hap_py_Rob_ot",
+    "Send a Message with the hashtag or search term for the infographic",
+    "Be a bit patient ;).  Average processing is 15 - 30 minutes", sep = "\n"), x = unit(0.5, "npc"), y = unit(0.4, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 0.3))
   dev.off()
   
   result <- 1

@@ -5,7 +5,7 @@
 setwd("/Users/tim/data")
 db_name <- "/Users/tim/data/HRP-DailyTrends.sqlite"
 db_connections <- "/Users/tim/data/HRP-Network.sqlite"
-number_of_tweets <- 20
+number_of_tweets <- 1000
 dbug <- FALSE
 
 #########################################################
