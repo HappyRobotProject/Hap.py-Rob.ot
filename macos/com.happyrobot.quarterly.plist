@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>Label</key>
+        <string>com.happyrobot.quarterly</string>
+
+        <key>ProgramArguments</key>
+        <array>
+                <string>/Users/tim/code/Hap.py-Rob.ot/bash/quarterly-tasks.sh</string>
+        </array>
+        
+        <key>UserName</key>
+		<string>tim</string>
+        
+        <key>StandardOutPath</key>
+   		<string>/Users/tim/data/quarterly.log</string>
+    	<key>StandardErrorPath</key>
+    	<string>/Users/tim/data/quarterly.err.log</string>
+    	<key>WorkingDirectory</key>
+		<string>/Users/tim/data</string>
+
+        <key>StartCalendarInterval</key>
+    	<dict>
+    		<key>Minute</key>
+        	<integer>05</integer>
+    	</dict>
+    	<dict>
+    		<key>Minute</key>
+        	<integer>20</integer>
+    	</dict>
+    	    	<dict>
+    		<key>Minute</key>
+        	<integer>35</integer>
+    	</dict>
+    	    	<dict>
+    		<key>Minute</key>
+        	<integer>50</integer>
+    	</dict>
+</dict>
+</plist>
