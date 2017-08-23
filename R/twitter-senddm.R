@@ -1,7 +1,3 @@
-
-
-#
-#
 #
 #########################################################
 # Script Setup
@@ -10,56 +6,33 @@ setwd("/Users/tim/data")
 db_name <- "/Users/tim/data/HRP-DailyTrends.sqlite"
 db_connections <- "/Users/tim/data/HRP-Network.sqlite"
 number_of_tweets <- 20
+dbug <- FALSE
+
 #########################################################
-# Library
+# Libraries
 #########################################################
-library(stringi)
+#Libraries
+library(rtweet)
+library(twitteR)
+library(plyr)
 library(dplyr)
 library(RSQLite)
+library(RColorBrewer)
+library(tidyr)
+library(stringi)
+library(extrafont)
+library(useful)
+#font_import()
+loadfonts()
+library("tm")
+library("SnowballC")
+library("wordcloud")
 
-#Fonts
-info.font <- "Impact"
-#Colors
-info.background <- "#2d3142"
-info.white <- "#ffffff"
-info.main <- "#7084a5"
-info.main.light <- "#A1CEE0"
-info.accent <- "#ef8354"
-info.accent.light <- "#C52D41"
-info.highlight <- "#bfc0c0"
-
-# Configure Theme
-basic_theme <- function(){
-  theme(
-    plot.background = element_rect(fill = "transparent", colour = "transparent"),
-    plot.margin = unit(c(0,0,0,0),"npc"),
-    panel.background = element_rect(fill = "transparent", color = "transparent"),
-    panel.spacing = unit(c(0,0,0,0), "npc"),
-    legend.position = "none"
-  )
-}
-bar_theme <- function(){
-  theme(
-    plot.background = element_rect(fill = "transparent", colour = "transparent"),
-    plot.margin = unit(c(-.05,-.05,-.05,-.05),"npc"),
-    panel.background = element_rect(fill = "transparent", color = "transparent"),
-    panel.spacing = unit(c(0,0,0,0), "npc"),
-    legend.position = "none",
-    axis.text = element_blank(),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank()
-  )
-}
-
-processMessageRequest1 <- function(message, sender_id, sender_sn, message_id){
-  #print(message)
-  print(sender_id)
-  #print(sender_sn)
-  #print(message_id)
-  return(TRUE)
-}
+# check to see if the twitter-util.R script is loaded
+if(!exists("twitterutilversion", mode="function")) source("/Users/Tim/code/Hap.py-Rob.ot/R/twitter-util.R")
+# check to see if the plot-util.R script is loaded
+if(!exists("plotutilversion", mode="function")) source("/Users/Tim/code/Hap.py-Rob.ot/R/plot-util.R")
+#source("~/code/Hap.py-Rob.ot/R/plot-util.R")
 
 
 processMessageRequest <- function(message, sender_id, sender_sn, message_id){
@@ -75,7 +48,7 @@ processMessageRequest <- function(message, sender_id, sender_sn, message_id){
   #print(len)
   
   if (len > 1){
-    print("len is good ... go")
+    #print("len is good ... go")
     cigResult <- createInfoGraphic(query, filename, sender_sn)
     if (exists("cigResult")){
       result <- cigResult
@@ -89,7 +62,16 @@ processMessageRequest <- function(message, sender_id, sender_sn, message_id){
       return(result)
     }
     
-    sdmResult <- sendDM()
+    #Send the Direct message
+    sdmResult <- sendDM(sender_id = sender_id, filename = filename)
+    if(exists("sdmResult") & sdmResult > 0){
+      ddmResult <- destroyDM(message_id = message_id)
+      if(exists("ddmResult") & ddmResult > 0){
+        result <- ddmResult
+      } else {
+        result <- 0
+      }
+    }
   }
   print("Completing  processMessageRequest")
   return(result)
@@ -115,24 +97,24 @@ createInfoGraphic <- function(query = NULL, filename = NULL, sender = NULL){
   print(exists("tweets"))
   if(tweetCount > 0){
     
-    print("Tweets Received .. processing")
-    print(exists("tweets"))
+    #print("Tweets Received .. processing")
+    #print(exists("tweets"))
     #print((tweets))
     #########################################################
     # Sentiment Analysis of the Tweets
     #########################################################
     tweetList <- rtTweetsToSentiment(tweetDataFrame = tweets)
-    print("2")
+    #print("2")
     emotionTotals <- as.data.frame(tweetList$emotionTotals)
     tweetPositivity <- as.data.frame(tweetList$positivityTotals)
-    print("3")
+    #print("3")
     emotionPlot <- pltEmotion(emotionTotals)
     donutPlot <- pltDonut(tweetPositivity)
     #############################################################
     # Process tweets for word cloud
     #############################################################
     # get the tweet text
-    print("4")
+    #print("4")
     tweetText <- twPrepTweetsForCloud(tweets$text)
     tweetWords <- twTweetToDocMatrix(tweetText)
     
@@ -149,61 +131,77 @@ createInfoGraphic <- function(query = NULL, filename = NULL, sender = NULL){
   return(result)
 }
 
-sendDM <- function(sender_id, filename){
+sendDM <- function(sender_id = "846168259355463680", filename = "/Users/tim/data/images/846168259355463681.png"){
   print("In sendDM")
-  library(stringi)
-  #argv <- c("/1.1/direct_messages.json")
-  #dms <- system2(command = "twurl", args = argv, stdout = TRUE)
+
+  #if(dbug){
+  #  sender_id <- "846168259355463680"
+  #  filename <- "/Users/tim/data/images/846168259355463681.png"
+  #}
   
+  #keys <- twurlkeys()
+  #argv <- c("/1.1/direct_messages.json", authArgs)
+  #argtimelin <-  c("/1.1/statuses/home_timeline.json")
+  #timeline <- system2(command = "twurl", args = argtimelin, stdout = TRUE)
+  #dms <- system2(command = "twurl", args = argv, stdout = TRUE)
+  #timelist <- jsonlite::fromJSON(timeline)
+  system2(command = "pwd")
   #############################################################
   # Upload the image
   #############################################################
   fileArg <- paste("-f", filename, sep = " ")
   #up_args <- c("-H upload.twitter.com", "/1.1/media/upload.json?media_category=dm_image", fileArg, "-F media", "-X POST", "-t")
-  up_args <- c("-H upload.twitter.com", "/1.1/media/upload.json?media_category=dm_image", fileArg, "-F media", "-X POST", "-t")
-  upload_response <- system2(command = "twurl", args = up_args, stdout = TRUE)
-  up_list <- jsonlite::fromJSON(upload_response)
-  #############################################################
-  # Extract Media Id
-  #############################################################
-  # Success?
-  # Get Media id
-  
-  #############################################################
-  # Send the Direct Message
-  #############################################################
-  recipArg <- paste('"',sender_id,'"',sep = "")
-  mediaArg <- paste('"',media_id,'"',sep = "")
-  #twurl -A 'Content-type: application/json' -X POST /1.1/direct_messages/events/new.json -d '{"event": {"type": "message_create", "message_create": {"target": {"recipient_id": "4534871"}, "message_data": {"text": "Hello World!"}}}}'
-  #payload <- '{"event": {"type": "message_create", "message_create": {"target": {"recipient_id": "846168259355463680"}, "message_data": {"text": "Hello World!"}}}}'
-  payload <- paste('{"event": {"type": "message_create", "message_create": {"target": {"recipient_id": ', recipArg, '}, "message_data": {"text": "picture post", "attachment": {"type": "media","media": {"id": ', mediaArg, '}}}}}}', sep = "")
-  payload <- paste("'",payload,"'", sep = "")
-  dm_args <- c("-A", "'Content-type: application/json'", "-X POST", "/1.1/direct_messages/events/new.json -d", payload, "-t")
-  system2(command = "twurl", args = dm_args)
+  up_args <- c("-H upload.twitter.com", "/1.1/media/upload.json?media_category=dm_image", fileArg, "-F media", "-X POST")
+  print("Starting TWURL upload")
+  upload_response <- system2(command = "/usr/local/bin/twurl", args = up_args, stdout = TRUE)
+  print("Upload Complete")
+  if(exists("upload_response")){
+    #############################################################
+    # Extract Media Id
+    #############################################################
+    up_list <- jsonlite::fromJSON(upload_response)
+    media_id <- up_list$media_id_string
+    print(paste("media id: ", media_id, sep = ""))
+    #############################################################
+    # Send the Direct Message
+    #############################################################
+    recipArg <- paste('"',sender_id,'"',sep = "")
+    mediaArg <- paste('"',media_id,'"',sep = "")
+    message_text <- "Here is your infographic from @Hap_py_Rob_ot"
+    messageArg <- paste('"',message_text,'"',sep = "")
+    #twurl -A 'Content-type: application/json' -X POST /1.1/direct_messages/events/new.json -d '{"event": {"type": "message_create", "message_create": {"target": {"recipient_id": "4534871"}, "message_data": {"text": "Hello World!"}}}}'
+    #payload <- '{"event": {"type": "message_create", "message_create": {"target": {"recipient_id": "846168259355463680"}, "message_data": {"text": "Hello World!"}}}}'
+    payload <- paste('{"event": {"type": "message_create", "message_create": {"target": {"recipient_id": ', recipArg, '}, "message_data": {"text": ', messageArg, ', "attachment": {"type": "media","media": {"id": ', mediaArg, '}}}}}}', sep = "")
+    payload <- paste("'",payload,"'", sep = "")
+    dm_args <- c("-A", "'Content-type: application/json'", "-X POST", "/1.1/direct_messages/events/new.json -d", payload)
+    dm_response <- system2(command = "/usr/local/bin/twurl", args = dm_args, stdout = TRUE)
+    
+    if(exists("dm_response")){
+      print("Completing sendDM -1")
+      return(1)
+    } else {
+      print("Completing sendDM -2")
+      return(0)
+    }
+  } else {
+    print("Completing sendDM -3")
+    return(0)
+  }
 }
 
-#########################################################
-# Libraries
-#########################################################
-#Libraries
-library(twitteR)
-library(plyr)
-library(dplyr)
-library(RSQLite)
-library(RColorBrewer)
-library(tidyr)
-library(stringi)
-library(extrafont)
-library(useful)
-#font_import()
-loadfonts()
-
-# check to see if the twitter-util.R script is loaded
-if(!exists("twitterutilversion", mode="function")) source("/Users/Tim/code/Hap.py-Rob.ot/R/twitter-util.R")
-# check to see if the plot-util.R script is loaded
-if(!exists("plotutilversion", mode="function")) source("/Users/Tim/code/Hap.py-Rob.ot/R/plot-util.R")
-#source("~/code/Hap.py-Rob.ot/R/plot-util.R")
-
+destroyDM <- function(message_id){
+  print("In destroyDM")
+  
+  messageIdArg <- paste("-d id=",message_id, sep = "")
+  destroyArg <- c("/1.1/direct_messages/destroy.json",messageIdArg)
+  destroyResult <- system2(command = "/usr/local/bin/twurl", args = destroyArg, stdout = TRUE)
+  
+  if(exists("destroyResult")){
+    return(1)
+  } else {
+    return(0)
+  }
+}
 
 #########################################################
 # Read in messages to reply to

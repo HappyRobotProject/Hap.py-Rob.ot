@@ -30,7 +30,19 @@ twkeys <- function(){
   return (list(consumer_key=ck,consumer_secret=cs,access_token=at,access_secret=as,app_name=an))
 }
 
-
+# Extract authentication keys from a csv file
+twurlkeys <- function(){
+  fileName <- paste(twPath(),"/auth/twurl-HRP.csv", sep = "")
+  auth <-read.csv(file = fileName, header = TRUE, stringsAsFactors = FALSE)
+  ck <- auth$consumer.key
+  cs <- auth$consumer.secret
+  at <- auth$access.token
+  as <- auth$access.secret
+  an <- auth$appname
+  un <- auth$username
+  pw <- auth$password
+  return (list(consumer_key=ck,consumer_secret=cs,access_token=at,access_secret=as,user=un,password=pw,app_name=an))
+}
 twSetRtweetToken <- function(token, file_name = "/auth/rtweet-token-HRP.rds"){
   fileName <- paste(twPath(),file_name, sep = "")
   ## save token

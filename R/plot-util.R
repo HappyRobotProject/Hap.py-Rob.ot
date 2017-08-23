@@ -4,6 +4,9 @@
 
 # Load libraries
 library(ggplot2)
+library("tm")
+library("SnowballC")
+library("wordcloud")
 
 
 #Simple function to allow another script to check if this is loaded
