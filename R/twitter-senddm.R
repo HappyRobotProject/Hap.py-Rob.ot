@@ -217,8 +217,8 @@ main <- function(){
     stop()
   }
   db <- dbConnect(SQLite(), dbname=db_name)
-  messages <- dbReadTable(conn = db, name = "messages")
-  messages2 <- dbGetQuery(conn = db,"Select * from messages where created = 0")
+  #messages <- dbReadTable(conn = db, name = "messages")
+  messages <- dbGetQuery(conn = db,"Select * from messages where created = 0")
   dbDisconnect(db)
   
   

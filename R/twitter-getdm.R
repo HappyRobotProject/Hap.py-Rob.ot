@@ -22,21 +22,34 @@ keys <- twkeys()
 token <- twitteR::setup_twitter_oauth(keys$consumer_key,keys$consumer_secret,keys$access_token,keys$access_secret)
 
 dm_list <- dmGet()
-messages <- data.frame(id=character(),text=character(),len=integer(), sender_id = character(), sender_screen_name = character(), created = integer(), stringsAsFactors = FALSE)
+db <- dbConnect(SQLite(), dbname=db_name)
+#messages <- data.frame(id=character(),text=character(),len=integer(), sender_id = character(), sender_screen_name = character(), created = integer(), stringsAsFactors = FALSE)
 for (dm in dm_list){
-  text <- dm$text
-  len <- nchar(as.character(text))
+  text <- as.character(dm$text)
+  len <- nchar(text)
   if (len < 50){
-    senderID <- dm$senderID
-    senderSN <- dm$senderSN
-    id <- dm$id
-    message <- data.frame(id=as.character(id),text=as.character(text),len = len, sender_id = as.character(senderID), sender_screen_name = as.character(senderSN), created = 0, stringsAsFactors = FALSE)
-    messages <- bind_rows(messages, message)
+    senderID <- as.character(dm$senderID)
+    senderSN <- as.character(dm$senderSN)
+    id <- as.character(dm$id)
+    messageCheck <- dbGetQuery(conn = db, "Select * from messages where id = :id", param = list(id=id))
+    print(paste("nrow",id,nrow(messageCheck),sep = ":"))
+    if(nrow(messageCheck) ==0){
+      dbExecute(conn = db,"Insert into messages ('id', 'text', 'len','sender_id', 'sender_screen_name', 'created') values (:id, :tx, :len, :sid, :sn, 0)", param = list(id=id,tx=text, len=len, sid=senderID, sn=senderSN))
+    }
+    #message <- data.frame(id=as.character(id),text=as.character(text),len = len, sender_id = as.character(senderID), sender_screen_name = as.character(senderSN), created = 0, stringsAsFactors = FALSE)
+    #messages <- bind_rows(messages, message)
   }
 }
 
+dbDisconnect(db)
+
+updateMessages <- function(senderID, senderSN, id){
+  #Select
+  #Update or Insert
+}
+
 #Write out the DM table
-if(nrow(messages)>0){
+if(FALSE & nrow(messages)>0){
   db <- dbConnect(SQLite(), dbname=db_name)
   dbWriteTable(conn = db, name = "messages", value = messages, row.names = FALSE, append = TRUE)
   print("Writing Table")
