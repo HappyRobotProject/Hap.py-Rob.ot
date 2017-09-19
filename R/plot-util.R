@@ -8,7 +8,7 @@ library("tm")
 library("SnowballC")
 library("wordcloud")
 
-
+pltDbug <- TRUE
 #Simple function to allow another script to check if this is loaded
 plotutilversion <- function(){
   return("0.0.1")
@@ -416,6 +416,9 @@ pltCreateImage <- function(listData, filename =  "/Users/Tim/data/images/userInf
   grid.text(listData$query, vjust = 0, y = unit(0.5, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 1.6))
   grid.text(paste("Infographic created for",listData$sender,"on", format(Sys.Date(), format="%B %d, %Y"), sep = " "), vjust = 0, y = unit(0.1, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 0.8))
   upViewport()
+  if(pltDbug == TRUE){
+    print("Header")
+  }
   
   #Right Pane
   vp2 <- viewport(x = 0.77, y = 0.0, w = 0.23, h = 0.85, just = c("left", "bottom"), name = "vp2")
@@ -431,7 +434,9 @@ pltCreateImage <- function(listData, filename =  "/Users/Tim/data/images/userInf
     sep = "\n"), vjust = 0, hjust = 0, x = unit(0.05, "npc"), y = unit(0.05, "npc"), gp = gpar(fontfamily = theme$font, col = theme$accent, cex = 0.5))
   
   upViewport()
-  
+  if(pltDbug == TRUE){
+    print("Right Pane")
+  }
   #Left Pane
   vp3 <- viewport(x = 0.0, y = 0.0, w = 0.23, h = 0.85, just = c("left", "bottom"), name = "vp3")
   vpDonut <- viewport(x = 0.5, y = 0.75, w = 1.0, h = 1.0)
@@ -444,7 +449,9 @@ pltCreateImage <- function(listData, filename =  "/Users/Tim/data/images/userInf
   #Tweet Count
   grid.text(listData$tweetCount, vjust = 0, y = unit(0.35, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 1.75))
   grid.text("tweets", vjust = 0, y = unit(0.31, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 0.7))
-  
+  if(pltDbug == TRUE){
+    print("Left Pane")
+  }
   #grid.rect(gp = gpar(fill = theme$background, col = theme$background))
   upViewport()
   vp4 <- viewport(x = 0.50, y = 0.10, w = 0.7, h = 0.10, just = c("center", "top"), name = "vp4")
@@ -456,7 +463,9 @@ pltCreateImage <- function(listData, filename =  "/Users/Tim/data/images/userInf
     "Send a Message with the hashtag or search term for the infographic",
     "Be a bit patient ;).  Average processing is 15 - 30 minutes", sep = "\n"), x = unit(0.5, "npc"), y = unit(0.4, "npc"), gp = gpar(fontfamily = theme$font, col = theme$highlight, cex = 0.3))
   dev.off()
-  
+  if(pltDbug == TRUE){
+    print("Done")
+  }
   result <- 1
   return(result)
 }

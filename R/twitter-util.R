@@ -291,3 +291,7 @@ dmPrepMessageForQuery <- function(message = NULL){
   q <- twRemoveLinks(message)
   return(as.character(q))
 }
+
+twProcessScreenname <- function(screen_name){
+  return (str_replace_all(stri_trans_tolower(as.character(screen_name)),"@",""))
+}

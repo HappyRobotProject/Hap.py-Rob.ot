@@ -4,4 +4,5 @@
 echo $PATH
 echo $(date)
 /usr/local/bin/Rscript /Users/tim/code/Hap.py-Rob.ot/R/twitter-hourly-trends.R
+echo $(date)
 /Users/tim/code/Hap.py-Rob.ot/bash/quarterly-tasks.sh

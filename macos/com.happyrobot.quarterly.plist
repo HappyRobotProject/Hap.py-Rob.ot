@@ -21,21 +21,27 @@
 		<string>/Users/tim/data</string>
 
         <key>StartCalendarInterval</key>
-    	<dict>
-    		<key>Minute</key>
-        	<integer>05</integer>
-    	</dict>
-    	<dict>
-    		<key>Minute</key>
-        	<integer>20</integer>
-    	</dict>
-    	    	<dict>
-    		<key>Minute</key>
-        	<integer>35</integer>
-    	</dict>
-    	    	<dict>
-    		<key>Minute</key>
-        	<integer>50</integer>
-    	</dict>
+        <array>
+    		<dict>
+    			<key>Minute</key>
+	        	<integer>05</integer>
+    		</dict>
+    		<dict>
+    			<key>Minute</key>
+	        	<integer>25</integer>
+    		</dict>
+    		<dict>
+    			<key>Minute</key>
+	        	<integer>35</integer>
+    		</dict>
+    		<dict>
+    			<key>Minute</key>
+	        	<integer>45</integer>
+    		</dict>
+    		<dict>
+    			<key>Minute</key>
+	        	<integer>55</integer>
+    		</dict>
+    	</array>
 </dict>
 </plist>

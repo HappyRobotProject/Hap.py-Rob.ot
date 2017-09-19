@@ -47,6 +47,11 @@ processMessageRequest <- function(message, sender_id, sender_sn, message_id){
   len <- nchar(query)
   #print(len)
   
+  #Set the row to -1 to indicate that we are working on it.
+  db <- dbConnect(SQLite(), dbname=db_name)
+  dbExecute(conn = db,"Update messages set created = -1 where id = :id", param = list(id=message_id, res=result))
+  dbDisconnect(db)
+  
   if (len > 1){
     #print("len is good ... go")
     cigResult <- createInfoGraphic(query, filename, sender_sn)
@@ -85,6 +90,7 @@ createInfoGraphic <- function(query = NULL, filename = NULL, sender = NULL){
   #print(query)
   #print(filename)
   result <- 0
+  print(query)
   
   #########################################################
   # Twitter Extracts
