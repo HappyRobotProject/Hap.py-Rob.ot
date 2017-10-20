@@ -289,6 +289,8 @@ rtExtractTweets <- function(q = "",
 
 dmPrepMessageForQuery <- function(message = NULL){
   q <- twRemoveLinks(message)
+  q <- str_replace_all(q," or "," OR ")
+  q <- str_replace_all(q," and "," AND ")
   return(as.character(q))
 }
 

@@ -28,7 +28,7 @@ dbNetwork <- dbConnect(SQLite(), dbname=db_connections)
 for (dm in dm_list){
   text <- as.character(dm$text)
   len <- nchar(text)
-  if (len < 50){
+  #if (len < 50){
     senderID <- as.character(dm$senderID)
     senderSN <- as.character(dm$senderSN)
     id <- as.character(dm$id)
@@ -40,7 +40,7 @@ for (dm in dm_list){
     }
     #message <- data.frame(id=as.character(id),text=as.character(text),len = len, sender_id = as.character(senderID), sender_screen_name = as.character(senderSN), created = 0, stringsAsFactors = FALSE)
     #messages <- bind_rows(messages, message)
-  }
+  #}
 }
 
 dbDisconnect(db)
